@@ -1,0 +1,24 @@
+set splitbelow splitright expandtab tabstop=2 shiftwidth=2 statusline=\ %f\ %y\ %m\ %r%=(%c,\ %l)\ 
+colorscheme u
+let mapleader=" "
+nnoremap <C-j> <C-w>j
+nnoremap <C-k> <C-w>k
+nnoremap <C-h> <C-w>h
+nnoremap <C-l> <C-w>l
+nmap - :edit %:h<CR>
+inoremap <Tab> <C-n>
+nmap <leader>s :split<CR>
+nmap <leader><leader> :nohlsearch<CR>
+xnoremap <leader>a c<c-r>=system('cast ta', @")<cr><esc>kJ
+autocmd VimResized * :wincmd =
+autocmd FileType netrw set nolist
+call plug#begin()
+Plug 'w0rp/ale'
+call plug#end()
+let g:netrw_banner = 0
+let g:netrw_browse_split = 0
+let g:netrw_list_hide = '^\.\.\=/\=$,\.DS_Store,.git\/$'
+let g:ale_fix_on_save = 1
+let g:ale_lint_on_text_changed = 'never'
+let g:ale_fixers = {'javascript':['prettier'],'javascriptreact':['prettier'],'go':['goimports'],'rust':['rustfmt']}
+let g:ale_linters = {'javascript':['eslint'],'javascriptreact':['eslint'],'go':['gofmt','golint','go vet','go build'],'rust':['cargo']}

@@ -1,0 +1,16 @@
+[user]
+  name = kiasaki
+  email = kiasaki0000@gmail.com
+[mergetool]
+	prompt = false
+[merge]
+	conflictstyle = diff3
+	tool = vimdiff
+[push]
+	default = simple
+[init]
+	defaultBranch = main
+[pull]
+	ff = only
+[core]
+  excludesfile = ~/.gitignore_global

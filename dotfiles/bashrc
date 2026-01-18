@@ -1,0 +1,40 @@
+export TERM=xterm
+export PAGER=less
+export EDITOR=nvim
+export PATH="$PATH:.:$HOME/bin:$HOME/.local/bin:/usr/bin:/bin:/usr/local/bin:/usr/sbin:/sbin:$HOME/goroot/bin:$HOME/gopath/bin:$HOME/.cargo/bin:$HOME/n/bin:$HOME/.foundry/bin"
+export GOPATH=$HOME/gopath
+export GOROOT=$HOME/goroot
+export N_PREFIX=$HOME/n
+source "$HOME/.myenv"
+alias r='exec $SHELL'
+alias vim='nvim'
+alias gaa='git add --all'
+alias gc='git commit'
+alias gca='git commit --amend --reuse-message=HEAD'
+alias gcl='git checkout -'
+alias gcm='git checkout main'
+alias grm='git rebase master'
+alias grc='git rebase --continue'
+alias gcp='git add --all && git commit -m x && git push origin HEAD'
+alias gd='git diff --color=always | less -r'
+alias gdh='git diff --color=always HEAD | less -r'
+alias gp='git push origin HEAD'
+alias gs='git status -sb'
+alias glog="git log --graph --pretty=format:'%Cred%h%Creset %an: %s - %Creset %C(yellow)%d%Creset %Cgreen(%cr)%Creset' --abbrev-commit --date=relative"
+function _prompt_git {
+  local dotgit=.git head
+  [[ -d "$dotgit" ]] || dotgit=../.git
+  [[ -d "$dotgit" ]] || dotgit=../../.git
+  [[ -d "$dotgit" ]] || return 0
+  read head < "$dotgit/HEAD"
+  case "$head" in
+    ref:*) echo "${head#*/*/}";;
+    *) echo "${head:0:7}";;
+  esac
+}
+if [ -n "$ZSH_VERSION" ]; then
+  setopt PROMPT_SUBST
+  export PROMPT='%T %1d (%F{cyan}$(_prompt_git)%f) '
+else
+  export PS1='$(basename $(pwd)):$(_prompt_git)$ '
+fi

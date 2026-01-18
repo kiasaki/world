@@ -1,0 +1,44 @@
+setxkbmap -option ctrl:nocaps
+export DISPLAY=":0.0"
+export QT_AUTO_SCREEN_SET_FACTOR=0
+export QT_SCALE_FACTOR=2
+export QT_FONT_DPI=96
+export GDK_SCALE=2
+export GDK_DPI_SCALE=0.5
+
+function kyt {
+  youtube-dl -o '$HOME/Downloads/%(title)s-%(id)s.%(ext)s' -f bestaudio
+}
+function klogout {
+  sudo pkill -u a
+}
+function kintscreen {
+  n=$(xrandr | grep "DisplayP.* conn" | awk '{ print substr($0, 13, 1) }')
+  xrandr --output eDP --auto --primary --output "DisplayPort-${n}" --off
+  ~/.fehbg
+}
+function kextscreen {
+  n=$(xrandr | grep "DisplayP.* conn" | awk '{ print substr($0, 13, 1) }')
+  xrandr --output eDP --off --output "DisplayPort-${n}" --auto --primary
+  ~/.fehbg
+}
+function kchromium {
+  chromium --high-dpi-support=1 --force-device-scale-factor=2.0
+}
+function kscreenshot {
+  scrot -s - | xclip -selection clipboard -target image/png
+}
+function kaudioout {
+  pw-dump -N | jq -r '.[] | select(.type == "PipeWire:Interface:Node" and .info.props["media.class"] == "Audio/Sink" and .info.params.EnumFormat[0].mediaType == "audio") | "\(.id): \(.info.props["node.nick"])"' | dmenu -p "audio output:" | cut -d : -f 1 | xargs wpctl set-default
+}
+function kvolup {
+  amixer -q set Master 5%+ unmute
+}
+function kvoldown {
+  amixer -q set Master 5%- unmute
+}
+function krandpass {
+  p=$(tr -dc 'A-Za-z0-9!?%=;.,' < /dev/urandom | head -c 20)
+  echo $p | xclip -sel clipboard
+  echo $p
+}
