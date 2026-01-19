@@ -1,0 +1,504 @@
+<!--
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`   `4!!!!!!!!!!~4!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   <~:   ~!!!~   ..  4!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  ~~~~~~~  '  ud$$$$$  !!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  ~~~~~~~~~: ?$$$$$$$$$  !!!!!!!!!!!!!!
+!!!!!!!!!!!`     ``~!!!!!!!!!!!!!!  ~~~~~          "*$$$$$k `!!!!!!!!!!!!!
+!!!!!!!!!!  $$$$$bu.  '~!~`     .  '~~~~      :~~~~          `4!!!!!!!!!!!
+!!!!!!!!!  $$$$$$$$$$$c  .zW$$$$$E ~~~~      ~~~~~~~~  ~~~~~:  '!!!!!!!!!!
+!!!!!!!!! d$$$$$$$$$$$$$$$$$$$$$$E ~~~~~    '~~~~~~~~    ~~~~~  !!!!!!!!!!
+!!!!!!!!> 9$$$$$$$$$$$$$$$$$$$$$$$ '~~~~~~~ '~~~~~~~~     ~~~~  !!!!!!!!!!
+!!!!!!!!> $$$$$$$$$$$$$$$$$$$$$$$$b   ~~~    '~~~~~~~     '~~~ '!!!!!!!!!!
+!!!!!!!!> $$$$$$$$$$$$$$$$$$$$$$$$$$$cuuue$$N.   ~        ~~~  !!!!!!!!!!!
+!!!!!!!!! **$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Ne  ~~~~~~~~  `!!!!!!!!!!!
+!!!!!!!!!  J$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$N  ~~~~~  zL '!!!!!!!!!!
+!!!!!!!!  d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$c     z$$$c `!!!!!!!!!
+!!!!!!!> <$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$> 4!!!!!!!!
+!!!!!!!  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  !!!!!!!!
+!!!!!!! <$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*"   ....:!!
+!!!!!!~ 9$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$e@$N '!!!!!!!
+!!!!!!  9$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$  !!!!!!!
+!!!!!!  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$""$$$$$$$$$$$~ ~~4!!!!
+!!!!!!  9$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$    $$$$$$$Lue  :::!!!!
+!!!!!!> 9$$$$$$$$$$$$" '$$$$$$$$$$$$$$$$$$$$$$$$$$$    $$$$$$$$$$  !!!!!!!
+!!!!!!! '$$*$$$$$$$$E   '$$$$$$$$$$$$$$$$$$$$$$$$$$$u.@$$$$$$$$$E '!!!!!!!
+!!!!~`   .eeW$$$$$$$$   :$$$$$$$$$$$$$***$$$$$$$$$$$$$$$$$$$$u.    `~!!!!!
+!!> .:!h '$$$$$$$$$$$$ed$$$$$$$$$$$$Fz$$b $$$$$$$$$$$$$$$$$$$$$F '!h.  !!!
+!!!!!!!!L '$**$$$$$$$$$$$$$$$$$$$$$$ *$$$ $$$$$$$$$$$$$$$$$$$$F  !!!!!!!!!
+!!!!!!!!!   d$$$$$$$$$$$$$$$$$$$$$$$$buud$$$$$$$$$$$$$$$$$$$$"  !!!!!!!!!!
+!!!!!!! .<!  #$$*"$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*  :!!!!!!!!!!!
+!!!!!!!!!!!!:   d$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$#  :!!!!!!!!!!!!!
+!!!!!!!!!!!~  :  '#$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*"    !!!!!!!!!!!!!!!
+!!!!!!!!!!  !!!!!:   ^"**$$$$$$$$$$$$$$$$$$$$**#"     .:<!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!:...                      .::!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    Hello my friend, how'ya doing?
+                Find me here https://github.com/kiasaki
+-->
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>kiasaki</title>
+<link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧋</text></svg>">
+<style>
+@font-face { font-family: 'Font'; src: url('/font.ttf') format('truetype'); font-display: swap; font-style: normal; font-weight: 100 1000; }
+:root { --primary: #1c7b85; --gray: #dedede; --foreground: #333333; --test: #3e0248; --background: #ffffff; --font: Font, sans-serif; }
+body { margin: 0; font-size: 16px; font-family: var(--font); font-weight: 100; color: var(--foreground); background: var(--background); background-image: url(header.jpg); background-position: center top; background-repeat: no-repeat; background-size: 100%; text-shadow: 1px 1px 1px white; }
+a { color: var(--primary); text-decoration: none; }
+a:hover { color: var(--primary); text-decoration: underline; }
+* { box-sizing: border-box; }
+ul { padding: 0 0 0 16px; margin-bottom: 16px; }
+li { list-style-type: square; margin-bottom: 8px; }
+p { margin: 0 0 16px; }
+.container { max-width: 840px; margin: 0 auto; padding: 32px; }
+.nav { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
+.nav img { height: 50px; border-radius: 100%; outline: 1px solid var(--primary); box-shadow: 1px 1px 1px white; }
+.nav h1 { font-size: 24px; margin: 0; }
+@media (max-width: 768px) { .nav { flex-direction: column; } }
+.title { font-size: 32px; margin: 64px 0 16px; }
+.card { background: rgba(0, 0, 0, 0.1); padding: 16px; }
+.flex-1 { flex: 1; }
+.text-right { text-align: right; }
+.mb-2 { margin-bottom: 8px; }
+.mb-4 { margin-bottom: 16px; }
+.mb-8 { margin-bottom: 32px; }
+</style>
+<body>
+<div class="container" id="top">
+  <div class="nav">
+    <img src="/avatar.jpg" />
+    <h1><a href="#top">kiasaki</a></h1>
+    <div class="flex-1"></div>
+    <a href="#about">about</a>
+    <a href="#contact">contact</a>
+    <a href="#projects">projects</a>
+    <a href="#more">more</a>
+  </div>
+
+  <div class="mb-8" id="about">
+    <h2 class="title">about</h2>
+    <p></p>
+    <p>i am programmer that's deeply passionate about it's craft. i can't stop studying and learning different corners of this field while spiraling upwards towards mastery</p>
+    <p>i don't fanboy any tool or language, simply appreciate the diversity and each's strengths and weaknesses. i like surmounting the insurmountable and doing it quickly and intensly</p>
+    <p>i don't specialize in just one area because what is most satisfying to me is a working product from the perspective of the user, and that means handling everything from ideation, prototype, contracts, api, validation, user interface, deployment and iteration</p>
+  </div>
+
+  <div class="mb-8" id="contact">
+    <h2 class="title">contact</h2>
+    <p>
+      telegram: <a href="https://t.me/kiasaki">@kiasaki</a><br/>
+      twitter: <a href="https://twitter.com/kiasaki0">@kiasaki0</a><br/>
+      email: <a href="mailto:kiasaki0000@gmail.com">kiasaki0000@gmail.com</a>
+    </p>
+  </div>
+
+  <div class="mb-8" id="projects">
+    <h2 class="title">projects</h2>
+    <ul>
+      <li><a href="https://github.com/kiasaki/world/tree/main/dotfiles">dotfiles</a> mainly vim and tmux configuration</li>
+      <li><a href="https://github.com/kiasaki/world/blob/main/ed.go">ed</a> 9001th text editor, now my daily</li>
+      <li><a href="https://github.com/kiasaki/world/blob/main/agent.go">agent</a> simplistic coding agent I use at times</li>
+      <li><a href="https://github.com/kiasaki/world/blob/main/term.c">term</a> x11 terminal, minimal deps, daily</li>
+      <li><a href="https://github.com/kiasaki/world/blob/main/wm.c">wm</a> my x11 window manager, floating, see bar.c</li>
+      <li><a href="https://github.com/kiasaki/world/blob/main/dm.c">dm</a> my x11 display manager, autologin</li>
+    </ul>
+  </div>
+
+  <div class="mb-8" id="more">
+    <h2 class="title">more</h2>
+    <p>i've always seems people (often from the "second brain" crowd) with impresive personal websites sprawling with information and links.</p>
+    <p>the rest of this page is my attempt to head in that direction while keeping things simple and minimal. but really it's mostly for myself, be happy if you find a tidbit that's useful to you.</p>
+		<a href="#blogroll">blogroll</a> &mdash;
+		<a href="#books">books</a> &mdash;
+		<a href="#backpack">backpack</a> &mdash;
+		<a href="#knowledge">knowledge</a>
+	</div>
+
+  <div class="mb-8" id="blogroll">
+    <h2 class="title">blogroll</h2>
+		<ul><li><a href="https://lobste.rs/">lobste.rs</a>
+    </li><li><a href="https://100r.co/site/home.html">100 rabbits</a>
+		</li><li><a href="https://www.inkandswitch.com/">ink and switch</a>
+		</li><li><a href="https://zserge.com/posts/">zserge</a>
+		</li><li><a href="https://tynan.com/">tynan</a>
+		</li><li><a href="http://danluu.com">dan luu</a>
+		</li><li><a href="https://charity.wtf/">charity</a>
+		</li><li><a href="https://drewdevault.com">drew devault</a>
+		</li><li><a href="https://eev.ee/blog/">eevee</a>
+		</li><li><a href="https://antirez.com/latest/0">antirez</a>
+		</li><li><a href="https://world.hey.com/dhh">dhh</a>
+		</li><li><a href="https://matt.might.net/articles/">matt might</a>
+		</li><li><a href="https://increment.com/">increment</a>
+		</li><li><a href="https://blog.pragmaticengineer.com">pragmatic engineer</a>
+		</li><li><a href="https://crawshaw.io/">crawshaw</a>
+		</li><li><a href="https://rauchg.com/">rauchg</a>
+		</li></ul>
+	</div>
+
+  <div class="mb-8" id="books">
+    <h2 class="title">books</h2>
+
+		<h3>next</h3>
+
+		<ul><li>thinking in systems: donella h. meadows
+		</li><li>ikigai: hector garcia
+		</li><li>the nvidia way: tae kim
+		</li><li>a small matter of programming: bonnie nardi
+		</li><li>the peripheral: william gibson
+		</li><li>neuromancer: william gibson
+		</li><li>ai engineering: chip huyen
+		</li><li>proof of stake: vitalik buterin
+		</li><li>the power of now: eckhart tolle
+		</li><li>mere chistianity: c.s. lewis
+		</li></ul>
+
+		<h3>2026</h3>
+
+		<ul><li>high noon: karen southwick
+		</li><li>the four agreements: don miguel ruiz
+		</li><li>technology, java and pizza: scott mcnealy
+		</li></ul>
+
+		<h3>2025</h3>
+
+		<ul><li>the abolition of man: c.s. lewis
+		</li><li>purpose and profit: dan koe
+		</li><li>vibe coding: gene kim & steve yegge
+		</li><li>effective c: robert c. seacord
+		</li><li>captured: christopher wylie
+		</li><li>ai 2041: kai-fu lee & chen qiufan
+		</li><li>the coming wave: mustafa suleyman
+		</li><li>co-intelligence: ethan mollick
+		</li><li>the almanack of naval ravikant: eric jorgenson
+		</li><li>sahil bloom: the 5 types of wealth
+		</li><li>simplicity parenting: kim john payne & lisa m. ross
+		</li></ul>
+
+		<h3>2024</h3>
+
+		<ul><li>last child in the woods: richard louv
+		</li><li>quoz: mel mattison
+		</li><li>red team blues: cory doctorow
+		</li><li>all systems red: martha wells
+		</li><li>the psycology of money: morgan housel
+		</li><li>inside the black box: rishi k. narang
+		</li><li>best loser win: tim hougaard
+		</li><li>a world without email: cal newport
+		</li></ul>
+
+		<h3>2023</h3>
+
+		<ul><li>die with zero: bill perkins
+		</li><li>the new market wizards: jack d.schwager
+		</li><li>the pathless path: paul millerd
+		</li><li>the anarchist handbook: michael malice
+		</li><li>hypermedia systems: adam stepinski & carson gross & deniz aksimsek
+		</li></ul>
+
+		<h3>2022</h3>
+
+		<ul><li>the infinite game: simon sinek
+		</li><li>discipline is destiny: ryan holiday
+		</li><li>siddhartha: hermann hesse
+		</li><li>foundation: isaac asimov
+		</li><li>the bitcoin standard: saifedean ammous
+		</li><li>the sovereign individual: james dale davidson & william rees-mogg
+		</li><li>the future is faster than you think: peter h. diamandis & steven kotler
+		</li></ul>
+
+		<h3>2021</h3>
+
+		<ul><li>ansi common lisp: paul graham
+		</li><li>lisp hackers: vsevolod domkin
+		</li><li>life profitability: adii pienaar
+		</li><li>the zurich axioms: max gunther
+		</li><li>money: jacob goldstein
+		</li></ul>
+
+		<h3>2020</h3>
+
+		<ul><li>the e-myth revisited: michael e. gerber
+		</li><li>culture and empire: pieter hintjens
+		</li><li>early retirement extreme: jacob lund fisker
+		</li><li>4 hour body: timothy ferriss
+		</li><li>hell yeah or no: derek sievers
+		</li><li>ego is the enemy: ryan holiday
+		</li><li>minimal mac: patrick rhone
+		</li><li>focus: leo babauta
+		</li><li>lost and founder: rand fishkin
+		</li><li>a philosophy of software design: john ousterhout
+		</li></ul>
+
+		<h3>2019</h3>
+
+		<ul><li>marketing: a love story: bernadette jiwa
+		</li><li>thinking forth: leo brodie
+		</li><li>company of one: paul jarvis
+		</li></ul>
+
+		<h3>2018</h3>
+
+		<ul><li>developer hegemony: erik dietrich
+		</li><li>it doesn't have to be crazy at work: jason fried & david heinemeier hansson
+		</li><li>masters of doom: david kushner
+		</li><li>trend following: michael w. covel
+		</li><li>understanding software: max kanat-alexander
+		</li><li>the problem of hft: haim bodek
+		</li><li>way of the turtle: curtis faith
+		</li><li>the little book of trading: michael covel
+		</li><li>linchpin: seth godin
+		</li><li>a man for all markets: edward o. thorp
+		</li><li>fooled by randomness: nassim nicholas taleb
+		</li><li>principles: ray dalio
+		</li></ul>
+
+		<h3>2017</h3>
+
+		<ul><li>blink: malcolm gladwell
+		</li><li>the developer's code: ka wai cheung
+		</li><li>the subtle art of not giving a fuck: mark manson
+		</li><li>extreme ownership: jocko willink & leif babin
+		</li><li>originals: adam grant
+		</li><li>wealth can't wait: david osborn & paul morris
+		</li><li>barking up the wrong tree: eric barker
+		</li><li>the millionaire fastlane: mj demarco
+		</li><li>quiet: susan cain
+		</li><li>the art of trend trading: michael parness
+		</li><li>beating the street peter lynch
+		</li><li>so good they can't ignore you: cal newport
+		</li><li>stock market wizards: jack d.schwager
+		</li><li>the new trading for a living: alexander elder
+		</li><li>stumbling on happiness: daniel gilbert
+		</li><li>a guide to the good life: william braxton irvine
+		</li><li>china china's mobile economy: winston ma
+		</li><li>elon musk: ashlee vance
+		</li><li>deep work: cal newport
+		</li><li>outliers: malcolm gladwell
+		</li><li>the richest man in babylon: george s. clason
+		</li><li>hackers: steven levy
+		</li><li>the hitchhikers guide to the galaxy: douglas adams
+		</li><li>how google works: eric schmidt
+		</li><li>rest: alex soojung-kim pang
+		</li><li>antifragile: nassim nicholas taleb
+		</li><li>the little schemer: daniel p. friedman & matthias felleisen
+		</li><li>effective python: brett slatkin
+		</li><li>coders at work: peter seibel
+		</li><li>execute: drew wilson & josh long
+		</li></ul>
+
+		<h3>2016</h3>
+
+		<ul><li>the ultimate freelancer's guidebook: yuwanda black
+		</li><li>drive: daniel h. pink
+		</li><li>code for cash: zack burt
+		</li><li>the c programming language: brian w. kernighan & denis m. ritchie
+		</li><li>the war of art: steven pressfield
+		</li><li>ultralight: leo babauta
+		</li><li>the hard thing about hard things: ben horowitz
+		</li><li>good to great: jim collins
+		</li><li>data driven: dj patil & hilary mason
+		</li><li>playing to win: lafley martin
+		</li><li>slack: tom demarco
+		</li><li>javascript: the good parts: douglas crockford
+		</li><li>code simplicity: max kanat-alexander
+		</li><li>software, faster: dan north
+		</li><li>realm of racket: matthias felleisen
+		</li><li>clojure for the brave and true: daniel higginbotham
+		</li><li>the mythical man month: frederick p. brooks, jr.
+		</li><li>how to stop sucking: jeff atwood
+		</li></ul>
+
+		<h3>2015</h3>
+
+		<ul><li>clean code: robert c. martin
+		</li><li>effective programming: jeff atwood
+		</li><li>give and take: adam grant
+		</li><li>how to fail at almost everything and still win big: scott adams
+		</li><li>the upgrade: paul carr
+		</li><li>7 day startup: dan norris
+		</li><li>packing light: fred perrotta
+		</li><li>learn you a haskell for great good!: miran lipovaca
+		</li><li>essential: joshua fields millburn & ryan nicodemus
+		</li><li>the end of jobs: taylor pearson
+		</li><li>the year without pants: scott berkun
+		</li><li>i will teach you to be rich: ramit sethi
+		</li><li>life changes quick: johnny fd
+		</li><li>the bulletproof diet: dave asprey
+		</li><li>the art of non-conformity: chris guillebeau
+		</li><li>money: master the game: tony robbins
+		</li><li>hackers & painters: paul graham
+		</li><li>the power of habit: charles duhigg
+		</li><li>the one thing: gary keller & jay papasan
+		</li></ul>
+
+		<h3>2014 and before</h3>
+
+		<ul><li>essentialism: greg mckeown
+		</li><li>zero to one: peter thiel
+		</li><li>the lean startup: eric ries
+		</li><li>the pragmatic programmer: andrew hunt & david thomas
+		</li><li>without their permission: alexis ohanian
+		</li><li>things a little bird told me: biz stone
+		</li><li>the 4-hour workweek: timothy ferriss
+		</li><li>the phoenix project: gene kim, kevin behr & george spafford
+		</li><li>talent is overrated: geoff colvin
+		</li><li>rework: jason fried & david heinemeier hansson
+		</li><li>remote: jason fried & david heinemeier hansson
+		</li><li>starting and sustaining: garret dimon
+		</li><li>scrum and xp from the trenches: henrik kniberg
+		</li></ul>
+
+		<h3>smaller reads</h3>
+
+		<ul><li>going pro: cal evans
+		</li><li>deal with it: gavin davies
+		</li><li>getting real: 37 signals
+		</li><li>the roller coaster life: chloe nicholls
+		</li><li>the little book of contentment: leo babauta
+		</li><li>owsap top 10: the open web application security project
+		</li><li>build apis you won't hate: phil sturgeon
+		</li><li>scaling php applications: steve corona
+		</li><li>a byte of vim: swaroop c h
+		</li><li>the motivation hacker: nick winter
+		</li></ul>
+  </div>
+
+  <div class="mb-8" id="backpack">
+    <h2 class="title">backpack</h2>
+
+		<p>i happen to love bags, at this point we could say i have a "collection" of them. initally it was born out of the "one bag" community and the idea of travelling light. over time simply liked the idea of having all i need with me, prepardness while being intentional about the selected few items you lug around all day. this grew to a point where i thought myself how to sew and a lot about materials and techniques. learned a lot from the backpacking community. below is a list of what i usually carry on the daily.</p>
+
+    <h3>messenger (homemade trakke wee lug)</h3>
+
+		<ul><li>laptop (framework 13)
+		</li><li>laptop sleve (homemade)
+		</li><li>notebook
+		</li><li>shopping bag (grocery shape tyvek)
+		</li><li>watch (seiko sbxy029)
+		</li><li>keys (held by key smart pocket clip)
+    </li><li>cards (held by nite ize)
+		</li><li>sling (see below)
+		</li><li>toiletries (see below)
+		</li></ul>
+
+    <h3>sling (homemade trakke zero waste)</h3>
+
+		<ul><li>handkerchief
+		</li><li>knife (benchmade bugout)
+		</li><li>flashlight (olight i3t)
+		</li><li>pen (lamy)
+		</li><li>lip balm (blistex)
+		</li><li>lighter (mini bix)
+		</li><li>sunglasses
+		</li><li>small notepad
+		</li><li>headphones (wired) + airpods
+		</li><li>charger (65w 2x usbc)
+		</li><li>various adapters
+    </li><li>usb key
+		</li></ul>
+
+    <h3>toiletries (homemade zip pouch)</h3>
+
+		<ul><li>deodorant
+		</li><li>toothbrush + paste
+		</li><li>comb (from hotel)
+		</li><li>razor
+		</li><li>tweezers + nail clipper (tweezerman)
+		</li><li>medicine (tyenol, tums, etc)
+		</li><li>sunscreen
+		</li><li>perfume
+		</li><li>tide to go
+		</li></ul>
+
+		<p>i also have an emergency ("get home") bag. a tool bag in my car trunk. a travel packing list. and a backpacking list.</p>
+	</div>
+
+  <div class="mb-8" id="knowledge">
+    <h2 class="title">knowledge</h2>
+    <h3>edc</h3>
+    <p>means "every-day-carry", hobby realted to obsessing over what you carry with you everyday with the goal of prepardness in mind. prefers when things are actaully with you when you need it so if you don't always have a bag on you, it means preferably you'll have some of those items in your pockets. the core items people often include are: knife (for opening amazon boxes, duh), flash light (because, no, you phone one is not enough), watch, pen & paper, wallet, key organizer. your bag is meant to be a cavity for smaller bags and pouches that keep things organized, this also makes it easier to move things from one bag to an other.</p>
+
+    <h3>journaling</h3>
+    <p>daily prompts: what excited me? what drained me? what did I learn?</p>
+    <p>bullet journaling: each line has a special prefix defining the tasks's status/type, free form thoughts under list, carry over not done items to next day. - task. + done. * note. = mood. O event. &gt; moved;</p>
+    <p>vomit journaling. V: vent (explore problems, thoughts). O: obligations (organize priorities). M: mindset (perspective, possibility, gratitude). I: ideate (solutions to problems). T: trajectory (dierction &gt; evidence &gt; actionables)</p>
+
+    <h3>philosophy</h3>
+    <p>stoic advice: be self-aware (reflect on actions), use reasoning to overcome emotions and master desires (fame, fortune, pleasures get in the way of tranquility), if wealthy enjoy it but don't cling to it, we are social creatures that are miserable when cut off from people (but don't have people with corrupt values around because they will contaminate you), other people will always be annoying if you let tehem (don't get angered by insults, laugh it out, self deprecate), 2 sources of unhapinnes (unstability and worrying about things out of our control), to get over instability do negative visualization contemplate loss and inpermanance (also practice poverty, even shortly), to get over worry about things beyond our control triage in 3 buckets (can control: handle easily, no control: forget, move on, some control: most time is spent here), with things you do not have full control over: internalize your goal (do not win this tenis match, play the best match possible), be fatalistic about the external world: past is out of our control, learn from it and shape the future.</p>
+
+    <h3>photography</h3>
+    <p>why: for expression. of memory, evidence, art, commerce</p>
+    <p>modes: manual (control everything), aperture priority (when you want to control focus), shutter priority (when you want to capture fast action or action over long time). action: low shutter, landscape: low aperture, portrait: high aperture</p>
+    <p>lenses: zoom (&gt;50mm), standard (35-50mm), wide angle (&lt;35)</p>
+    <p>composition: simplicity, rule of thirds, lines, balance, framing, avoid mergers</p>
+    <p>composition2: clear subject, many takes, vertical vs horizontal, position subject in picture, position subject in space, concious of horizon line, vary angles (up, down, etc), use background, indicate scale, be creative, break rules</p>
+    <p>genres: portrait, landscape, documentary, still</p>
+    <p>editing: crop un-necessary, contrast (dynamic), balance (fix indoor), saturation (black and white is timeless)</p>
+    <p>motion: stop (highest shutter speed), blur (slow shutter with tripod), panning (follow subject with camera, blurs background), timelapse (blurs motion)</p>
+
+    <h3>startups</h3>
+    <p>focus on: know your customer, think outside the box, follow market, pivot fast, execute fast, focus on revenue, know runway, work with people you enjoy</p>
+    <p>8 core areas: leadership (create culture), finance (ensure sustainability), operations (minimize risk), growth (optimize), product (produce predictable value), service (maximize satisfaction), sales (generate revenue), marketing (identify, understand and generate demand)</p>
+    <p>documentation types: getting started, best practices, how to, faq, troubleshooting (name based on job to be done, not feature)</p>
+    <p>interviewing candidate: look for warnings, intro (get to know), relax (where from), test/task (likes, feelings, thought process), how we work / role, questions</p>
+    
+    <h3>monitoring</h3>
+    <p>red: rate (req/s), error (http status breakdown), duration (req ms), saturation (cpu usage), health (read/write ok)</p>
+    <p>types: metrics (what), logs (why), traces (where). but if you have a great db like scuba, powerdrill, honeycomb, druid then you only need traces and derive the rest, add field based sampling for scalability</p>
+    <p>if storing metrics in a home grown way, you will typically agregate in a time bucket, but to keep all the details / flexibility, do not only record last value in the time range, increment count, raise max if needed, lower min if needed, and update avg (newavg = (oldavg * count + value) / (count+1))</p>
+    <p>traces entries are traditionally composed of: id, timestamp, duration, parentId, traceId, name, type (service name), tags (kvp), span (client, server, producer, etc)</p>
+    <p>the idea really isn't to add those retroactively to debug once you encounted an issue. it's to put this in place by default in every service and include adding tracing as part of developing any feature. they will help you understand anything that is going on in production at any moment in time in the future. a bit like having a debugger always attached. this especially useful because issues are often caused by corner cases that happen rarely and simply trying to reason from the outside with just a stack trace can make the job much harder and lengthier than it has to be.</p>
+    <p>i kind of fangirl on the columnar data stores foks like honeycomb and facebook wrote for themselves, collect the papers and talks</p>
+
+    <h3>lisp</h3>
+    <p>Lisp cycles XKCD #297: "Those are your father’s parentheses. Elegant weapons for a more… civilized age." but really lisp was early to a lot of what made it's way into modern languages over the years, and still has things that most languages will never achive like code as data because... parenthesis.</p>
+    <p>primitives: atom, eq, car, cdr, cons, quote, cond, lambda, label, apply</p>
+    <p>more (scheme): define set! let begin pair? list? null? eq? eqv? cond case and or map for-each + - * / = &lt; &lt;= append assoc assq assv list include length min max gcd modulo member memq memv not reverse unless quasiquote unquote unquote-splicing when error raise guard</p>
+
+    <h3>forth</h3>
+    <p>interesting because dead simple to implement, very close to the machine, but surprisingly capable (even pleasant) in the hands of somebody that is familiar. because it has this meta programming at it's core, it can bootstrap most of it's user space from just a few primitives, see 1992 IOCCC first &amp; third. book recomendation: thinking forth</p>
+    <p>stack: push pop dup drop swap over nop rot</p>
+    <p>math/logic: and or xor not shr addc</p>
+    <p>transfer: jmp jz jc call ret loop</p>
+    <p>memory: ldr str lit</p>
+
+    <h3>personal data and software</h3>
+    <p>this subject has always been a subject near and dear to my hearth and the subject of 80% of my sideprojects</p>
+    <p>in my head i have an ever evolving vision for a tool that mostly deals with plain-text, but support multimedia, embraces existing standards (md, csv, vcard, ics, eml, jpg, mp3), is encrypted, local first, synced, mobile accessible, but would be nice to avoid the web, searchable and maybe user programmable to some extent (with search, display modes)</p>
+    <p>data types i have: files, notes, passwords, contacts, calendar events, emails, speadsheets, pictures, music, pdfs, books (ebup), podcast feeds, rss feeds</p>
+    <p>commonly self hosted services: file sync, notes, office, email, feed reader, blogging, bookmarks, multimedia streaming, passwords, paste bin, url shortener, file sharing, photos, recipies, search, ci, forge/git, todos, uptime/monitoring, time tracking, wiki</p>
+
+    <h3>fashion</h3>
+    <p>tips: fitting clothes, daily grooming / skin, fresh haircut, wear a watch, clean shoes, avoid logos, ironed clothes, fragrance, have a fit body (!), buy pieces not outfits, invest in quality cut junk, use shoe trees, always carry a lint roller</p>
+    <p>fit tips: fitting pants as a base, layering, personal accessory, bag, mix textures, color, standout, project confidence, know trends, forget trends, hair / self-care ^</p>
+    <p>wardrobe essentials: black/white t-shirts, black jeans, cool jacket, favorite hoodie, top: polos | button downs | crew neck sweaters, bottom: denim | chinos | dress fitted, shoe: sneaker | boot | dress, outer: bomber | trucker | puff, belt (black leather), watch</p>
+
+    <h3>health</h3>
+    <p>skincare. morning: cleanse, toner, moisturize, sunscreen (no towel, air dry). night: cleanse, toner, retinol, moisturize</p>
+    <p>better sleep: early healthy dinner 5pm, cold room 64f, no caffeine after 12pm, early bedtime 9pm, no water after dinner, blacked out room, read before bed, track it, sleep alone, no alcohol</p>
+    <p>stronglifts 5x5 workout: do 3x/week, warmup to weight, if you fail rep end set and rest 5m. fail sets 3 workout in a row: deload 10%. workout A: squat, bench press, barbell row, B: squat, overhead press, deadlift. alternate</p>
+    <p>workout goals: 3x strength, 3x zone2, 1x VO2 max. squat 220, bench 175, overhead 100, deadlife 300.</p>
+    <p>somewhat unrelated but, dating: photos to have on your profile. style: clean, put together outfit. physique: not forced, natural pool/boat. dog: if you have. hobby: tell a sotry, show personality. adventure: show you can be adventurous.</p>
+
+    <h3>cars</h3>
+    <p>cars are very deep hobby, there's multiple different "scenes" that have different takes on what they like doing to their cars (track, drift, stance, show, rally, street, drag, itasha). i've gravitated towards just making it pretty and unique while enjoying the stock power).</p>
+    <p>consumables: engine oil, coolant, transmission/diff oil, brake fluid, power steering fluid, blinker fluid ;)</p>
+    <p>detailing steps: rinse, brush tires & rims with degreaser, soap and rag wash, iron remover & wipe, clay bar with lubricant, compound with machine & wipe, wax with machine & wipe, or wash wax away and ceramic coat</p>
+    <p>detailing inside: remove trash and items, clean mats, vacuum everywhere (using compressed air to lift dirt up), duster on surfaces, hard surfaces with apc on microfiber cloth, fabric upholstery with drill attachment, leather with cleaner then conditioner then dry, clean all windows, dressing on trims, put back mats and items, deodorize</p>
+    <p>buying used: title rebuilt or not, flexibility on price, anything wrong not mentioned, reson for selling, what was done recently, vin/carfax, check everything works, use to lower price: radio, buttons, ac, wipers, speakers, handbrake, windows, trunk, ligths</p>
+
+    <h3>boats</h3>
+    <p>before going out: weather forcast, local hazards, maps and charts, personal flotation devices, first aid kit, tool kit, spare parts, fuel level, tell someone where you are going</p>
+    <p>tips: wear the right gear & pfd & sunglasses & sunscreen, no alcohol drinking, drive responsibly, don't overload boat, bring a gps and backup charts</p>
+    <p>glossary. hull: body, gunwale: upper edge of sides, bow: front, stern: back, transom: cross-section of stern, cleat: metal thing to attach rope, port: left, starboard: right, sideligths: red on port, green on starboard, white at rear, capsizing: flip over, beam: width, bilge: lowest point of hull, keel: strutural piece under helping stability, draft: vertical distance from waterline to bilge, aft: back most, forward: forward most, freeboard: vertical distance from waterline to gunwale, wake: disturbed column of water behind</p>
+    <p>hull types: flat (fishing, calm water, slow speed), round (canoes, slow, easy to roll), deep-v (smooth ride, needs bigger engine, power boats), multi-hull (most stable, catamarans, pontoons)</p>
+    <p>engine types. outboard: mounted on back, move engine to steer. inboard: on hull, 4 stroke with driveshaft, steered with rudder. sterndrive: inboard but steered by moving propeller</p>
+    <p>&lt;12yo: 10hp max unsupervised. &lt;16yo 40hp max unsupervised. all boats need notice stating max load and max hp. over 10hp you need a license number and display it on sides high contrast</p>
+    <p>distress signals: if you see of hear, you are obligated to help (if safe). radio: 2182 MF, channel 16, 158.6 VHF DSC, channel 70 DSC. mayday x3: immediate danger. pan-pan x3 urgent message concerning safety. mention boat name, position, emergency. sound signal: every minute (gun, flare, horn, whistle). flashlight sos: 3 short, 3 long, 3 short. arm signal: raise and lower stretched arms. flags: ball under square, N over C.</p>
+    <p>required equipment, varries depending on size, but at 24m: pfd for every passenger, reboarding device, buyant heaving line, flashlight, flares 12x, bailer / bilge pump, anchor, manual propelling device, navigation lights, compass, sound device, 10BC fire extinguisher, axes, fire buckets</p>
+    <p>right of way: sailboats and canoes first, coming from back: you move, colliding with startboard: they move, colliding with port: you move out (behind), face to face: pass on right</p>
+	</div>
+
+</div>
+</body>

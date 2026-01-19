@@ -102,7 +102,7 @@ func (e *Editor) Render() {
 				}
 				if !inVisual && e.Mode >= 2 && y >= y1 && j+e.OffsetX >= x1 {
 					inVisual = true
-					ab.WriteString("\x1b[7m")
+					ab.WriteString("\x1b[97;100m")
 				}
 				if inVisual && e.Mode >= 2 && y == y2 && j+e.OffsetX > x2 {
 					ab.WriteString("\x1b[m")
@@ -171,7 +171,7 @@ func (e *Editor) Render() {
 	ab.WriteString(e.Message[:messagew])
 
 	// write
-	ab.WriteString(fmt.Sprintf("\x1b[%d;%dH", (e.Y-e.OffsetY)+1, (e.RenderedX-e.OffsetX)+1))
+	ab.WriteString(fmt.Sprintf("\x1b[%d;%dH", (e.Y-e.OffsetY)+1, e.RenderedX+1))
 	ab.WriteString("\x1b[?25h")
 	_, err := ab.WriteTo(os.Stdout)
 	die(err)
@@ -290,11 +290,12 @@ func (e *Editor) Input() {
 				e.Mode = 0
 				e.Message = ""
 			} else {
-				e.VisualY = e.Y
-				e.VisualX = 0
-				clipboardWrite(e.Range(e.VisualRange()))
-				e.X = len(e.Lines[e.Y])
-				e.DeleteVisual()
+				clipboardWrite(e.Lines[e.Y] + "\n")
+				e.Edit(2, e.Y, 0, e.Lines[e.Y], "")
+				if e.Y >= len(e.Lines) {
+					e.Y = len(e.Lines) - 1
+				}
+				e.X = 0
 			}
 		case 'y':
 			if e.Mode >= 2 {
@@ -663,19 +664,39 @@ func (e *Editor) InsertNewline() {
 }
 
 func (e *Editor) Insert(s string) {
-	e.Edit(0, e.Y, e.X, "", s)
-	e.X += len(s)
+	lines := strings.Split(s, "\n")
+	if len(lines) == 1 {
+		e.Edit(0, e.Y, e.X, "", s)
+		e.X += len(s)
+		return
+	}
+	// first line
+	e.Edit(0, e.Y, e.X, "", lines[0])
+	e.X += len(lines[0])
+	for i := 1; i < len(lines); i++ {
+		e.InsertNewline()
+		e.Edit(0, e.Y, e.X, "", lines[i])
+		e.X += len(lines[i])
+	}
 }
 
 func (e *Editor) Range(x1, y1, x2, y2 int) string {
 	if y1 == y2 {
-		return e.Lines[y1][x1:x2]
+		end := x2 + 1
+		if end > len(e.Lines[y1]) {
+			end = len(e.Lines[y1])
+		}
+		return e.Lines[y1][x1:end]
 	}
 	s := e.Lines[y1][x1:]
 	for i := y1 + 1; i < y2; i++ {
 		s += "\n" + e.Lines[i]
 	}
-	s += "\n" + e.Lines[y2][:x2]
+	end := x2 + 1
+	if end > len(e.Lines[y2]) {
+		end = len(e.Lines[y2])
+	}
+	s += "\n" + e.Lines[y2][:end]
 	return s
 }
 
@@ -698,15 +719,10 @@ func (e *Editor) DeleteVisual() {
 	if y1 == y2 && x1 == x2 {
 		return
 	}
-	e.VisualX, e.VisualY, e.X, e.Y = x1, y1, x2, y2
-	for {
-		e.Delete()
-		if e.Y == e.VisualY && e.X == e.VisualX {
-			break
-		}
-	}
-	e.Move(0, 1)
-	e.Delete()
+	s := e.Range(x1, y1, x2, y2)
+	e.Edit(0, y1, x1, s, "")
+	e.X, e.Y = x1, y1
+	e.Move(0, 0)
 }
 
 func (e *Editor) Delete() {
