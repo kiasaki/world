@@ -31,3 +31,11 @@ if [ ! -d "$HOME/n" ]; then
   $HOME/n/bin/npm i -g eslint
   $HOME/n/bin/npm i -g prettier
 fi
+
+if [ ! -d "$HOME/zig" ]; then
+  wget -O zig.tar.xz https://ziglang.org/builds/zig-x86_64-linux-0.16.0-dev.2193+fc517bd01.tar.xz
+  tar -xf zig.tar.xz
+  mv zig-* ~/zig
+  rm zig.tar.xz
+  sudo ln -s ~/zig/zig /usr/bin/zig
+fi
