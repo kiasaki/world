@@ -33,38 +33,16 @@
 !!!!!!!!!!  !!!!!:   ^"**$$$$$$$$$$$$$$$$$$$$**#"     .:<!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!:...                      .::!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    Hello my friend, how'ya doing?
-                Find me here https://github.com/kiasaki
+                    hello my friend, how'ya doing?
+                find me here https://github.com/kiasaki
 -->
 <meta charset="utf-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>kiasaki</title>
 <link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧋</text></svg>">
-<style>
-@font-face { font-family: 'Font'; src: url('/font.ttf') format('truetype'); font-display: swap; font-style: normal; font-weight: 100 1000; }
-:root { --primary: #1c7b85; --gray: #dedede; --foreground: #333333; --test: #3e0248; --background: #ffffff; --font: Font, sans-serif; }
-body { margin: 0; font-size: 16px; font-family: var(--font); font-weight: 100; color: var(--foreground); background: var(--background); background-image: url(header.jpg); background-position: center top; background-repeat: no-repeat; background-size: 100%; text-shadow: 1px 1px 1px white; }
-a { color: var(--primary); text-decoration: none; }
-a:hover { color: var(--primary); text-decoration: underline; }
-* { box-sizing: border-box; }
-ul { padding: 0 0 0 16px; margin-bottom: 16px; }
-li { list-style-type: square; margin-bottom: 8px; }
-p { margin: 0 0 16px; }
-.container { max-width: 840px; margin: 0 auto; padding: 32px; }
-.nav { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; }
-.nav img { height: 50px; border-radius: 100%; outline: 1px solid var(--primary); box-shadow: 1px 1px 1px white; }
-.nav h1 { font-size: 24px; margin: 0; }
-@media (max-width: 768px) { .nav { flex-direction: column; } }
-.title { font-size: 32px; margin: 64px 0 16px; }
-.card { background: rgba(0, 0, 0, 0.1); padding: 16px; }
-.flex-1 { flex: 1; }
-.text-right { text-align: right; }
-.mb-2 { margin-bottom: 8px; }
-.mb-4 { margin-bottom: 16px; }
-.mb-8 { margin-bottom: 32px; }
-</style>
-<body>
+<link rel="stylesheet" href="/styles.css" />
+<title>kiasaki</title>
+
 <div class="container" id="top">
   <div class="nav">
     <img src="/avatar.jpg" />
@@ -78,7 +56,6 @@ p { margin: 0 0 16px; }
 
   <div class="mb-8" id="about">
     <h2 class="title">about</h2>
-    <p></p>
     <p>i am programmer that's deeply passionate about it's craft. i can't stop studying and learning different corners of this field while spiraling upwards towards mastery</p>
     <p>i don't fanboy any tool or language, simply appreciate the diversity and each's strengths and weaknesses. i like surmounting the insurmountable and doing it quickly and intensly</p>
     <p>i don't specialize in just one area because what is most satisfying to me is a working product from the perspective of the user, and that means handling everything from ideation, prototype, contracts, api, validation, user interface, deployment and iteration</p>
@@ -109,11 +86,27 @@ p { margin: 0 0 16px; }
     <h2 class="title">more</h2>
     <p>i've always seems people (often from the "second brain" crowd) with impresive personal websites sprawling with information and links.</p>
     <p>the rest of this page is my attempt to head in that direction while keeping things simple and minimal. but really it's mostly for myself, be happy if you find a tidbit that's useful to you.</p>
+		<a href="#archives">archives</a> &mdash;
 		<a href="#blogroll">blogroll</a> &mdash;
 		<a href="#books">books</a> &mdash;
 		<a href="#backpack">backpack</a> &mdash;
 		<a href="#knowledge">knowledge</a>
 	</div>
+
+  <div class="mb-8" id="archives">
+    <h2 class="title">archives</h2>
+		<p>disclaimer: those are very old posts from a more youthful me, they are still here for posterity</p>
+		<ul><li>2017 may <a href="/agile-ideal-vs-reality.html">agile: ideal vs reality</a>
+    </li><li>2016 sep <a href="/on-motivation.html">on motivation</a>
+    </li><li>2016 may <a href="/text-editor-implementation.html">text editor implementation as a programming étude</a>
+    </li><li>2015 nov <a href="/bringing-sanity-to-nodejs.html">bringing sanity to nodejs</a>
+    </li><li>2015 sep <a href="/4-reasons-for-slowing-down.html">4 resons for slowing down</a>
+    </li><li>2015 aug <a href="/building-a-saas-business-is.html">building a saas business is 20% code 80%...</a>
+    </li><li>2015 mar <a href="/constantly-improving.html">constantly improving</a>
+    </li><li>2014 oct <a href="/boring-tech.html">boring tech is the best tech</a>
+		</li><li>2014 apr <a href="/equality-of-languages.html">equality of languages</a>
+    </li></ul>
+  </div>
 
   <div class="mb-8" id="blogroll">
     <h2 class="title">blogroll</h2>
@@ -501,4 +494,3 @@ p { margin: 0 0 16px; }
 	</div>
 
 </div>
-</body>

@@ -1,0 +1,247 @@
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧋</text></svg>">
+<link rel="stylesheet" href="/styles.css" />
+<title>kiasaki - bringing sanity to nodejs</title>
+<div class="container"><div class="nav"><img src="/avatar.jpg" /><h1><a href="/">kiasaki</a></h1><div class="flex-1"></div><a href="/#archives">&larr; back</a></div><div class="content">
+
+<h2 class="title">bringing sanity to nodejs</h2>
+
+<p>It seems like most of the content written and blogged about Node.js, even now,
+6 years in, takes a really basic approach to showing you how to build applications.</p>
+<p>A lot of Node.js articles explain <strong>Express.js</strong> the leading web framework,
+the problem is, this framework is comparable to <strong>Sinatra</strong> in Ruby or <strong>Flask</strong>
+in Python or <strong>Silex</strong> in PHP. Good for small few pages website, basically gives
+you <em>routing</em> and an <em>interface to HTTP</em> but not much more.</p>
+<p>Now Ruby, Python and others have bigger frameworks that are well suited for larger
+project where you benefits from more <em>architecture</em>, opinionated <em>defaults</em> and
+supporting modules (ORMs, utilities, rendering, mailing, background workers, assets
+pipelines). The story is a bit different in <strong>Node.js</strong> as it promotes small npm
+modules (i.e. gems, packages) that you put together by yourself, which, is a good
+thing, most experienced developers prefer libraries over frameworks, but, there
+is no literature or examples of how this can be done within the Node.js ecosystem.</p>
+<p>So, to solve this, let&#39;s try and define few libraries or simple files that can
+help us out with our growing codebase.</p>
+<h2 id="goals">Goals</h2>
+<p>The goals here are to have something easier to maintain than an <code>app.js</code> file,
+a <code>routes/</code>, <code>models/</code> and <code>views/</code> folder that&#39;s it. To achieve this we are going
+to go on a hunt and steal few time tested tricks from other ecosystems.</p>
+<h2 id="dependency-injection">Dependency injection</h2>
+<p>Some people seem to dread this one, others love it. Having experienced it a lot
+in <strong>Laravel</strong> a great framework for PHP and in Java in quite a few places,
+dependency injection can help keep all our application parts and files decoupled.
+Leading to way easier unit testing and modification of dependencies.</p>
+<p>The concept is, all of your request handlers/controllers have dependencies,
+your models/repositories/entities too, you could go and hard code them by requiring
+the right file and using it but if you let a <em>dependency injection container</em>
+do it for you, you can more easily change that required components by a different
+implementation of it and, when testing, you can directly pass in stubs/mocks
+without any trickery or magic.</p>
+<p>So, how would we go about implementing this?</p>
+<p>First step is to have a file that represents the global instance of the <em>container</em>.
+That is, where all instances will be stored and the tool that resolve needed
+dependencies when you&#39;ll want to instantiate a controller.</p>
+<p>It would look like this:</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> Container <span class="hljs-keyword">from</span> <span class="hljs-string">'./lib/contrainer'</span>;
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-keyword">new</span> Container();
+</code></pre>
+<p>Then, in your <code>app.js</code> you can register libraries you want to make available to
+the following classes you&#39;ll register/use.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> express <span class="hljs-keyword">from</span> <span class="hljs-string">'express'</span>;
+<span class="hljs-keyword">import</span> container <span class="hljs-keyword">from</span> <span class="hljs-string">'./container'</span>;
+
+<span class="hljs-keyword">let</span> app = express();
+<span class="hljs-comment">// ... middlewares, config ...</span>
+
+<span class="hljs-comment">// Manually setting intance</span>
+<span class="hljs-keyword">import</span> EventEmitter <span class="hljs-keyword">from</span> <span class="hljs-string">'events'</span>;
+container.set(<span class="hljs-string">'events'</span>, <span class="hljs-keyword">new</span> EventEmitter());
+
+<span class="hljs-comment">// Automatically resolving dependencies and setting an instance</span>
+container.load(<span class="hljs-built_in">require</span>(<span class="hljs-string">'./lib/config'</span>));
+container.load(<span class="hljs-built_in">require</span>(<span class="hljs-string">'./lib/db'</span>));
+container.load(<span class="hljs-built_in">require</span>(<span class="hljs-string">'./lib/auth'</span>));
+container.load(<span class="hljs-built_in">require</span>(<span class="hljs-string">'./repositories/user'</span>));
+container.load(<span class="hljs-built_in">require</span>(<span class="hljs-string">'./services/billing'</span>));
+
+<span class="hljs-comment">// Using container to resolve dependencies but</span>
+<span class="hljs-comment">// giving back the instance insted of setting it.</span>
+<span class="hljs-keyword">let</span> requireUser = contrainer.get(<span class="hljs-string">'auth'</span>).requireUserMiddleware;
+<span class="hljs-keyword">let</span> userController = container.create(<span class="hljs-built_in">require</span>(<span class="hljs-string">'./controllers/user'</span>));
+app.get(<span class="hljs-string">'/users/:id'</span>, requireUser, userController.showUser);
+app.get(<span class="hljs-string">'/users/create'</span>, requireUser, userController.showCreateUser);
+app.post(<span class="hljs-string">'/users'</span>, requireUser, userController.createUser);
+
+<span class="hljs-comment">// ... error handling ...</span>
+
+app.listen(contrainer.get(<span class="hljs-string">'config'</span>).get(<span class="hljs-string">'port'</span>));
+container.get(<span class="hljs-string">'events'</span>).emit(<span class="hljs-string">'app:started'</span>);
+</code></pre>
+<p><em>(When you grow to have many more routes, extracting those to their own <code>routes.js</code>
+is a good idea)</em></p>
+<p>The final piece being the DI container it-self. I tried making it as compact as
+possible.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> R from <span class="hljs-string">'ramda'</span>;
+
+export <span class="hljs-keyword">default</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Container</span> </span>{
+  <span class="hljs-keyword">constructor</span>() {
+    <span class="hljs-keyword">this</span>.contents = {};
+  }
+
+  <span class="hljs-keyword">get</span>(name) {
+    <span class="hljs-keyword">if</span> (!(name <span class="hljs-keyword">in</span> <span class="hljs-keyword">this</span>.contents)) {
+      <span class="hljs-keyword">throw</span> Error(<span class="hljs-string">'Container has nothing registered for key '</span> + name);
+    }
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.contents[name];
+  }
+
+  <span class="hljs-keyword">set</span>(name, instance) {
+    <span class="hljs-keyword">this</span>.contents[name] = instance;
+  }
+
+  create(klass) {
+    <span class="hljs-keyword">if</span> (!(<span class="hljs-string">'length'</span> <span class="hljs-keyword">in</span> klass.dependencies)) {
+      <span class="hljs-keyword">throw</span> new Error(<span class="hljs-string">'Invariant: container can\'t resolve a class without dependencies'</span>);
+    }
+
+    <span class="hljs-keyword">var</span> dependencies = R.map(function(dependencyName) {
+      <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.<span class="hljs-keyword">get</span>(dependencyName);
+    }.bind(<span class="hljs-keyword">this</span>), klass.dependencies);
+
+    <span class="hljs-keyword">return</span> applyToConstructor(klass, dependencies)
+  }
+
+  load(klass) {
+    <span class="hljs-keyword">if</span> (typeof klass.dependencyName !== <span class="hljs-string">'string'</span>) {
+      <span class="hljs-keyword">throw</span> new Error(<span class="hljs-string">'Invariant: container can\'t resolve a class without a name'</span>);
+    }
+
+    <span class="hljs-keyword">this</span>.<span class="hljs-keyword">set</span>(klass.dependencyName, <span class="hljs-keyword">this</span>.create(klass));
+  }
+
+  unset(name) {
+    delete <span class="hljs-keyword">this</span>.contents[name]
+  }
+
+  reset() {
+    <span class="hljs-keyword">this</span>.contents = {};
+  }
+}
+
+function applyToConstructor(<span class="hljs-keyword">constructor</span>, args) {
+  <span class="hljs-keyword">var</span> newObj = Object.create(<span class="hljs-keyword">constructor</span>.prototype);
+  <span class="hljs-keyword">var</span> constructorReturn = <span class="hljs-keyword">constructor</span>.apply(newObj, args);
+
+  <span class="hljs-comment">// Some constructors return a value; let's make sure we use it!</span>
+  <span class="hljs-keyword">return</span> constructorReturn !== undefined ? constructorReturn : newObj;
+}
+</code></pre>
+<h2 id="repositories-entities-and-services-instead-of-large-models">Repositories, Entities and Services instead of large Models</h2>
+<p>It&#39;s been told on many blog posts and talks for a good while now that fat models
+are evil. The <strong>ActiveRecord</strong> pattern that&#39;s so prevalent in Rails and many ORMs
+is easily replaced by separating concerns:</p>
+<ul>
+<li><strong>Data representation</strong> goes in <em>models</em>. Those are as dump as possible, optimally
+immutable.</li>
+<li><strong>Fetching/Saving/Database interactions</strong> are made in <em>repositories</em>. Those take
+plain models and knows how to persist them and query datastores.</li>
+<li><strong>Business logic</strong> goes into <em>services</em>. Services is the place where most of
+the complexity resides, it&#39;s what controllers call with input, what validates
+business rules, what&#39;s calling repositories and external apis.</li>
+</ul>
+<p>To give concrete examples:</p>
+<p>An <strong>entity</strong> is a simple POJO/PORO/POCO...</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> R from <span class="hljs-string">'ramda'</span>;
+
+export <span class="hljs-keyword">default</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">InvoiceLine</span> </span>{
+  <span class="hljs-keyword">constructor</span>(params) {
+    R.mapObjIndexed((v, k) =&gt; <span class="hljs-keyword">this</span>[k] = v, R.merge(User.defaults, params));
+  }
+
+  taxAmount() {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.price * <span class="hljs-keyword">this</span>.taxes;
+  }
+
+  total() {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.price + <span class="hljs-keyword">this</span>.taxAmount();
+  }
+}
+InvoiceLine.defaults = {price: <span class="hljs-number">0</span>, taxes: <span class="hljs-number">0.15</span>, created: Date.now()};
+</code></pre>
+<p>A <strong>repository</strong> will most likely take a database object in it&#39;s constructor to
+be able to interact with the datastore. Repositories are singletons loaded once
+when stating the app using the container&#39;s <code>load</code> method.</p>
+<pre><code class="lang-javascript"><span class="hljs-keyword">import</span> User <span class="hljs-keyword">from</span> <span class="hljs-string">'../entities/user'</span>;
+<span class="hljs-keyword">const</span> TABLE_NAME = <span class="hljs-string">'users'</span>;
+
+<span class="hljs-keyword">export</span> <span class="hljs-keyword">default</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">UserRepository</span> </span>{
+  <span class="hljs-keyword">constructor</span>(db) {
+    <span class="hljs-keyword">this</span>.db = db;
+  }
+
+  findByEmail(email) {
+    <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.db.select(<span class="hljs-string">'id, name, email, ...'</span>)
+      .from(TABLE_NAME)
+      .where(<span class="hljs-string">'email = ?'</span>, email)
+      .limit(<span class="hljs-number">1</span>)
+      .exec();
+  }
+}
+UserRepository.dependencyName = <span class="hljs-string">'repositories:user'</span>;
+UserRepository.dependencies = [<span class="hljs-string">'db'</span>];
+</code></pre>
+<p>A service is the simplest of the 3 in form but the one in which most complexity
+will hide. It simply has instance methods and dependencies listed to it can be
+registered in the container for controllers to depend on.</p>
+<pre><code class="lang-javascript">export <span class="hljs-keyword">default</span> <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">BillingService</span> </span>{
+  <span class="hljs-keyword">constructor</span>(userRepository, stripeService, mailer) {
+    <span class="hljs-keyword">this</span>.userRepository = userRepository;
+    <span class="hljs-keyword">this</span>.stripeService = stripeService;
+    <span class="hljs-keyword">this</span>.mailer = mailer;
+  }
+
+  createNewAccout(name, email, password, stripeToken) {
+    <span class="hljs-comment">// validate</span>
+    <span class="hljs-comment">// create user</span>
+    <span class="hljs-comment">// create stripe customer</span>
+    <span class="hljs-comment">// update db user</span>
+    <span class="hljs-comment">// send welcome email</span>
+    <span class="hljs-comment">// ...</span>
+  }
+
+  <span class="hljs-comment">// ...</span>
+}
+BillingService.dependencyName = <span class="hljs-string">'services:billing'</span>;
+BillingService.dependencies = [
+  <span class="hljs-string">'repositories:user'</span>, <span class="hljs-string">'services:stripe'</span>, <span class="hljs-string">'mailer'</span>
+];
+</code></pre>
+<h2 id="slimmer-controllers-in-favor-of-services">Slimmer Controllers in favor of Services</h2>
+<p>Now that we have a dedicated place to put business logic, you should aim to slim
+down those controllers to their essential job: mapping requests and the http
+protocol oddities to method calls/actions to be taken.</p>
+<p>This simple action has the new benefit of decoupling yourself from the transport
+protocol enabling reuse of all that business logic by other consumers like:
+background workers, a websocket endpoint, a protobuff endpoint even a separate
+codebase if you decide to extract the core of your app into a library when you
+grow bigger.</p>
+<h2 id="factories">Factories</h2>
+<p>As your project grows and your entities become more complex you may come to a
+point where you find yourself spending a lot of lines initializing entities in
+your services, it&#39;s a good idea to extract those to factories. Those object will
+give you a clean way to encapsulate complex entity construction with many branches.</p>
+<h2 id="the-lib-folder-still-exists">The <code>lib</code> folder still exists</h2>
+<p>Not everything fits into the concepts we just went over, there are few middlewares,
+really simple libs or wrapper and definitively have their place in your <code>lib</code>
+folder, just try to keep it lean and mean, most of your code is supposed to be
+elsewhere.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>I hope this post gave you ideas on how to reduce the size and complexity of your
+routes files/folder. Code organization (/architecture) starts simple in a new
+project but <strong>needs</strong> to grow linearly as your project matures or your productivity
+will suffer quite a bit.</p>
+<p>I would love to know how you deal with growing codebases too! DM on Twitter or
+send me an email.</p>
+
+</div></div>

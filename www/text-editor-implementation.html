@@ -1,0 +1,139 @@
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="shortcut icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧋</text></svg>">
+<link rel="stylesheet" href="/styles.css" />
+<title>kiasaki - text editor implementation as a programming étude</title>
+<div class="container"><div class="nav"><img src="/avatar.jpg" /><h1><a href="/">kiasaki</a></h1><div class="flex-1"></div><a href="/#archives">&larr; back</a></div><div class="content">
+
+<h2 class="title">text editor implementation as a programming étude</h2>
+
+<p>If you&#39;re a programmer yourself and are looking to improve your skills, I would
+like to propose to generally &quot;deliberately practice&quot; your craft, in the sense
+&quot;repeatedly attack problems at the edge of you capabilities in an exercise context, not at
+work&quot;. And, as finding personal project ideas can be quite tricky for some,
+I would like to propose <em>implementing a text editor</em> as a really good project
+choice.</p>
+<p>Now this proposition makes sense, in my opinion, because of the wide array of
+real hard problems related to so many different subjects of programming it has
+to offer. Also, there are good chances it&#39;s quite different from what you
+work on daily (a majority of programmers are knee deep in the web of mobile
+applications these days) hence, will feel like a playful, new and exciting
+project.</p>
+<p>Now hold your horses as, <strong>implementing a complete text editor that can rival
+with you current one (even if it&#39;s <em>Notepad</em> or <em>ed(1)</em>) is a really big task</strong>.
+Try to start by setting your eyes on implementing a subpart of a one first.</p>
+<p>Now for ideas on sub-parts that you could aim for:</p>
+<ul>
+<li><strong>A line editor</strong>: You know how your shell allows you to press backspace,
+delete characters to the beginning of the line, move the cursor? Well all of
+those are really nice thing but are quite novelties, most of there where not
+present in older shells. So, try your hand at implementing a program that asks
+for input but implements line editing features. Think of what a REPL does.
+Try for:<ul>
+<li>Typing characters</li>
+<li>Backspace</li>
+<li>Moving with arrows</li>
+<li>Deleting to beginning/end of line</li>
+<li>Moving to beginning/end of line</li>
+<li>Moving word by word backward/forward</li>
+<li>Entering in &quot;replace mode&quot; (like the <code>insert</code> key on keyboards)</li>
+</ul>
+</li>
+<li><strong>Rendering a window tree of files</strong>: Try writing a terminal program that
+renders a tree of windows, each node being one of three types: horizontal
+split, vertical split, actual file/window. That one will get you thinking
+about recursing in a tree, caching information about location in files,
+calculating what is a line, how wide is a char, a tab, a Unicode char, how
+do you make it fast enough so that render wouldn&#39;t block the editors main loop
+in a real editor. Try for:<ol>
+<li>Reading files from disk</li>
+<li>Selecting a current position (so you get to implement scrolling)</li>
+<li>Creating a window tree so that all files have their own window split</li>
+<li>Rendering the window tree with nice window borders</li>
+<li>Framing and rendering the currently visible lines of the files</li>
+<li>Maybe have a status bar under each files showing stats line number of
+lines, current line, chars, file rights, file size, ....</li>
+<li>Make it fast by only rendering what&#39;s needed when some file changes on disk</li>
+</ol>
+</li>
+<li><strong>A file datastructure</strong>: Holding a file in memory, a task most editors need
+to do, is not an easy task. Getting it to be the right balance between:
+size in memory, insertion speed, deletion speed and interface complexity is a
+real struggle. The other problem you can attack after you have the basics
+right is testing operations on a file that is huge, bigger than 100MB and
+make that use case operations work in a decent time (&lt; 100ms at least).
+Try exploring the following prior art in the matter:<ul>
+<li><a href="https://en.wikipedia.org/wiki/Rope_(data_structure">Rope</a>)</li>
+<li><a href="https://en.wikipedia.org/wiki/Gap_buffer">Gap Buffer</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Circular_buffer">Circular buffer</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Red%E2%80%93black_tree">Red-Black tree</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Linked_list">or a simple Linked List</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Array_data_structure">or try the venerable Array</a><br>
+<em>Try testing how fast (and what&#39;s the Big O of each?) of the following
+operations:</em></li>
+<li>Inserting 1 character at the start/middle/end</li>
+<li>Deleting 1 character at the start/middle/end</li>
+<li>Inserting 10 000 characters at the start/middle/end</li>
+<li>Deleting 10 000 characters at the start/middle/end</li>
+<li>Inserting at the start the right after at the end</li>
+<li>Loading in memory</li>
+<li>Writing to disk</li>
+</ul>
+</li>
+<li><strong>A command set/language</strong>: This one is a fun one for language lovers as it
+involves implementing a set of commands the user can use to edit files.
+You need to be able to parse an input string into an abstract syntax tree,
+then interpret it and execute it against a file contents. Here are good
+examples of editors that implemented a command set:<ul>
+<li>Vi - covers a lot, succinct <a href="http://vimdoc.sourceforge.net/htmldoc/usr_07.html">[1]</a><a href="http://vimdoc.sourceforge.net/htmldoc/usr_03.html">[2]</a><a href="http://vimdoc.sourceforge.net/htmldoc/usr_27.html">[3]</a></li>
+<li>Ed - not a visual editing, the grandfather of many others <a href="http://www.gnu.org/software/ed/manual/ed_manual.html">1</a></li>
+<li>Teco - really a language, also inspired a few others <a href="https://en.wikipedia.org/wiki/TECO_(text_editor">[1]</a>#Example_session)</li>
+<li>Emacs - less on point but think about keyboard keybindings and how natural they are to hit <a href="https://www.emacswiki.org/emacs/EmacsNewbieKeyReference">[1]</a></li>
+</ul>
+</li>
+<li><strong>A plugin/configuration language</strong>: This one is all about implementing a
+full blown programming language (parser, interpreter, interface with host
+implementation language). A lot of toy editor project go without this one as
+it is a big chunk of work but a really crucial one in all popular editors
+theses day. You&#39;ll be designing a language with the direct goal of exposing
+editor features, configuration and allowing the implementation of plugins
+that can change behaviour and call core editor methods.
+Take a look at the following languages that are used in popular editors:<ul>
+<li>ELisp</li>
+<li>VimL</li>
+<li>Lua</li>
+<li>Python</li>
+<li>Guile Scheme</li>
+<li>Perl</li>
+</ul>
+</li>
+<li><strong>A progressive rendering algorithm</strong>: This one is a bit smaller and needs
+quite a few pieces around it to make it work/visual. It consists in writing
+an algorithm that allows you to start a rerender of the screen following a
+user&#39;s input but allows for stopping in the middle to handle user input then
+start back for where we where at the last rerender call making sure to
+invalidate parts that where just changed by the user&#39;s action.
+Try reading this book at this point, it&#39;s really one of the only books going
+in deep about many subject related to text editor implementation:<ul>
+<li><a href="https://www.finseth.com/craft/">The Craft of Text Editing</a></li>
+</ul>
+</li>
+</ul>
+<p><em>There a more smaller projects/parts that could be added to this list but at
+this point I would advise starting small but trying to build a complete editor
+and adding adding is all of those subparts together.</em> <strong>Those first big goal
+being to be able to write the text editor with the new editor itself. :D</strong></p>
+<p>If you are interested in reading the implementation of a few <strong>toy editors</strong>
+with rather <em>simple codebases</em> you can look at:</p>
+<ul>
+<li><a href="https://github.com/zyedidia/micro">micro</a></li>
+<li><a href="https://github.com/nsf/godit">godit</a></li>
+<li><a href="https://github.com/martanne/vis">vis</a></li>
+<li><a href="https://github.com/peterh/liner">liner</a></li>
+<li><a href="https://github.com/gchp/iota">iota</a></li>
+<li><a href="https://github.com/rgburke/wed">wed</a></li>
+</ul>
+
+</div></div>
+
