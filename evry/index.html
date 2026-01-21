@@ -1,0 +1,83 @@
+<!doctype html>
+<title>evry</title>
+<meta charset="utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="manifest" href="/app.webmanifest" />
+<link rel="icon" type="image/png" href="/icon.png" />
+<link rel="apple-touch-icon" href="/icon.png" />
+<style>
+:root { --font: sans-serif; --size: 18px; --foreground: #222; --background: #fff; --border: #ddd; }
+body { font-family: var(--font); font-size: var(--size); line-height: 1.33; margin: 0; color: var(--foreground); background: var(--background); }
+* { box-sizing: border-box; }
+.input { padding: 8px; min-width: 200px; border: none; background: transparent; color: var(--foreground); line-height: 1.333; font-size: var(--size); font-family: var(--font); outline: 0; border-radius: 0; }
+.button { color: var(--background); background: var(--foreground); font-family: var(--font); padding: 8px; border: 0; font-size: var(--size); cursor: pointer; text-align: left; }
+.container { max-width: 800px; border: 1px solid var(--border); border-width: 0 1px 0 1px; min-height: 100vh; }
+.w-full { width: 100%; }
+.border-r, .border-t, .border-b { border: 0 solid var(--border); }
+.border-t { border-top-width: 1px; }
+.border-b { border-bottom-width: 1px; }
+</style>
+<div id="root">
+  <form class="container" style="max-width:300px" onsubmit="javascript:onUnlock(event)">
+    <h1 style="margin:0;padding:8px">evry</h1>
+    <input class="input border-t w-full" id="usernameField" placeholder="username" /><br />
+    <input class="input border-t w-full" id="passwordField" placeholder="password" type="password" autoFocus /><br />
+    <button class="button w-full" type="submit">unlock</button>
+  </form>
+</div>
+<script>
+const newId = () => Date.now()+(""+Math.random()).slice(-5);
+const idDate = (i) => new Date(parseInt(i.slice(0, -5)));
+const formatDate = (d) => d.toLocaleString('en-CA',{hour12:0}).slice(0,17).replace(",","");
+const rpc = (u, c, d) => fetch(`/?user=${u}&checkpoint=${c}`,{method:"POST",body:d.map(d=>JSON.stringify(d)).join('\n').trim()}).then(r => r.status == 200 ? r.text() : Promise.reject(new Error('error ' + r.status))).then(t => t.split('\n').filter(d => d).map(d => JSON.parse(d)));
+const intToBinary = (i, r = []) => {
+  while (i>0) { r.unshift(i & 0xff); i >>= 8; }
+  while (r.length % 8 !== 0) r.unshift(0);
+  return Uint8Array.from(r);
+}
+const stringToBytes = (i) => new TextEncoder().encode(i);
+const bytesToString = (i) => new TextEncoder().decode(i);
+function base32ToBytes(s) {
+  let a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=";
+  let x, bits = 0, o = "", len = s.length;
+  for (let i = 0; i < len; i += 1) {
+    let v = a.indexOf(s.charAt(i).toUpperCase());
+    if (v < 0 || v >= 32) continue;
+    x = (x << 5) | v;
+    bits += 5;
+    if (bits < 8) continue;
+    o = o + String.fromCharCode((x >> (bits - 8)) & 0xff);
+    bits -= 8;
+  }
+  if (bits > 0) {
+    let c = ((x << (8 - bits)) & 0xff) >> (8 - bits);
+    if (c !== 0) o = o + String.fromCharCode(c);
+  }
+  return o;
+}
+function bytesToBase32(v) {
+  let a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let b = 0, bl = 0, r = "";
+  for (const i of v) {
+    b = (b << 8) | i; bl += 8;
+    while (bl >= 5) { bl -= 5; r += a[(b >>> bl) & 0x1f]; }
+  }
+  if (bl > 0) r += a[(b << (5 - bl)) & 0x1f]
+  return r;
+}
+const cryptoRandom = (l) => crypto.getRandomValues(new Uint8Array(l)).then(bytesToBase32);
+const cryptoHash = (i) => crypto.subtle.digest("SHA-256", stringToBytes(i)).then(bytesToBase32);
+const cryptoKeyFromPassword = await (p, s) => {
+  const key = await crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: base32ToBytes(salt), iterations: 100000, hash: "SHA-256" },
+    await crypto.subtle.importKey(
+      "raw", stringToBytes(password),
+      { name: "PBKDF2" }, false, ["deriveKey"]
+    ),
+    { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]
+  );
+  return bytesToBase32(await crypto.subtle.exportKey("raw", key));
+};
+</script>
+

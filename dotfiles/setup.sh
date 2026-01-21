@@ -10,6 +10,8 @@ rm -f ~/.config/nvim/init.vim && cp vimrc ~/.config/nvim/init.vim
 rm -f ~/.config/nvim/colors/u.vim && cp vimu.vim ~/.config/nvim/colors/u.vim
 rm -f ~/.config/nvim/syntax/go.vim && cp vimgo.vim ~/.config/nvim/syntax/go.vim
 rm -f ~/.config/nvim/autoload/plug.vim && cp vimplug.vim ~/.config/nvim/autoload/plug.vim
+mkdir -p ~/.config/ghostty
+rm -f ~/.config/ghostty/config && cp ghostty ~/.config/ghostty/config
 touch ~/.myenv ~/.hushlogin
 
 if [ ! -f $HOME/goroot/bin/go ]; then

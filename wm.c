@@ -342,12 +342,12 @@ static void maximize_window() {
   }
 
   int frame_w = mw;
-  int frame_h = mh;
+  int frame_h = mh-(BASE_TITLE_HEIGHT*k_scale);
   int client_w = frame_w - 2 * border_width;
   int client_h = frame_h - title_height - 2 * border_width;
 
   XMoveResizeWindow(dpy, clients[idx].frame, mx, my, frame_w, frame_h);
-  XResizeWindow(dpy, clients[idx].win, client_w, client_h-(BASE_TITLE_HEIGHT*k_scale));
+  XResizeWindow(dpy, clients[idx].win, client_w, client_h);
   draw_title_bar(&clients[idx], frame_w);
 }
 

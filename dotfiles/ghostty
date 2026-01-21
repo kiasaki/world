@@ -1,0 +1,26 @@
+font-size = 14
+font-family = Berkeley Mono
+cursor-invert-fg-bg = true
+keybind = ctrl+shift+h=goto_split:left
+keybind = ctrl+shift+l=goto_split:right
+keybind = ctrl+shift+j=goto_split:down
+keybind = ctrl+shift+k=goto_split:up
+foreground = #222222
+background = #FFFFFF
+cursor-text = #000000
+palette = 0=#1D1F21
+palette = 1=#CC6666
+palette = 2=#B5BD68
+palette = 3=#F0C674
+palette = 4=#81A2BE
+palette = 5=#B294BB
+palette = 6=#8ABEB7
+palette = 7=#C5C8C6
+palette = 8=#969896
+palette = 9=#CC6666
+palette = 10=#B5BD68
+palette = 11=#F0C674
+palette = 12=#81A2BE
+palette = 13=#B294BB
+palette = 14=#8ABEB7
+palette = 15=#FFFFFF
