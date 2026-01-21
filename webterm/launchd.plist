@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.atriumph.webterm</string>
+    <key>UserName</key>
+    <string>a</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/a/bin/webterm</string>
+    </array>
+    <key>KeepAlive</key>
+    <true/>
+    <key>EnvironmentVariables</key>
+    <dict>
+       <key>TERM</key>
+       <string>xterm-256color</string>
+    </dict>
+</dict>
+</plist>
