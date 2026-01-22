@@ -7,8 +7,8 @@
 <link rel="icon" type="image/png" href="/icon.png" />
 <link rel="apple-touch-icon" href="/icon.png" />
 <style>
-@font-face { font-family: "font"; src: local("Go Mono"), url("font.ttf"); }
-:root { --font: sans-serif; --size: 18px; --foreground: #222; --background: #fff; --border: #ddd; }
+@font-face { font-family: "font"; src: url("/font.ttf") format("truetype"); }
+:root { --font: "font", sans-serif; --size: 18px; --foreground: #222; --background: #fff; --border: #ddd; }
 body { font-family: var(--font); font-size: var(--size); line-height: 1.33; margin: 0; color: var(--foreground); background: var(--background); }
 * { box-sizing: border-box; }
 .input { padding: 8px; min-width: 200px; border: none; background: transparent; color: var(--foreground); line-height: 1.333; font-size: var(--size); font-family: var(--font); outline: 0; border-radius: 0; }

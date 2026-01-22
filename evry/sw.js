@@ -1,4 +1,4 @@
-const name = "evry-v5";
+const name = "evry-v6";
 const files = ["/", "/font.ttf", "/icon.png"];
 self.addEventListener("install", (e) => {
   self.skipWaiting();
