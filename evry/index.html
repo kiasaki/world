@@ -7,6 +7,7 @@
 <link rel="icon" type="image/png" href="/icon.png" />
 <link rel="apple-touch-icon" href="/icon.png" />
 <style>
+@font-face { font-family: "font"; src: local("Go Mono"), url("font.ttf"); }
 :root { --font: sans-serif; --size: 18px; --foreground: #222; --background: #fff; --border: #ddd; }
 body { font-family: var(--font); font-size: var(--size); line-height: 1.33; margin: 0; color: var(--foreground); background: var(--background); }
 * { box-sizing: border-box; }
@@ -14,6 +15,8 @@ body { font-family: var(--font); font-size: var(--size); line-height: 1.33; marg
 .button { color: var(--background); background: var(--foreground); font-family: var(--font); padding: 8px; border: 0; font-size: var(--size); cursor: pointer; text-align: left; }
 .container { max-width: 800px; border: 1px solid var(--border); border-width: 0 1px 0 1px; min-height: 100vh; }
 .result:hover { background: var(--foreground); color: var(--background); cursor: pointer; }
+.icon { width: 20px; height: 20px; vertical-align:middle; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.block { display: block; }
 .flex { display: flex; }
 .flex-1 { flex: 1; }
 .p-2 { padding: 8px; }
@@ -21,6 +24,7 @@ body { font-family: var(--font); font-size: var(--size); line-height: 1.33; marg
 .w-full { width: 100%; }
 .error { color: red; }
 .faded { opacity: 0.6; }
+.hidden { display: none; }
 .border-r, .border-t, .border-b { border: 0 solid var(--border); }
 .border-t { border-top-width: 1px; }
 .border-b { border-bottom-width: 1px; }
@@ -29,15 +33,17 @@ body { font-family: var(--font); font-size: var(--size); line-height: 1.33; marg
   <form class="container" style="max-width:300px" onsubmit="javascript:onUnlock(event)">
     <h1 style="margin:0;padding:8px">evry</h1>
     <input class="input border-t w-full" id="usernameField" placeholder="username" /><br />
-    <input class="input border-t w-full" id="passwordField" placeholder="password" type="password" autoFocus /><br />
+    <input class="input border-t w-full" id="passwordField" placeholder="password" type="password" /><br />
+    <input class="input border-t w-full" id="pinField" placeholder="pin" type="password" autoFocus /><br />
     <button class="button w-full" type="submit">unlock</button>
+    <a class="block p-2" onclick="onSignout()">signout</a>
   </form>
 </div>
 <script>
 const newId = () => Date.now()+(""+Math.random()).slice(-5);
 const idDate = (i) => new Date(parseInt(i.slice(0, -5)));
 const formatDate = (d) => d.toLocaleString('en-CA',{hour12:0}).slice(0,17).replace(",","");
-const rpc = (u, c, d) => fetch(`/?user=${u}&checkpoint=${c}`,{method:"POST",body:d.map(d=>JSON.stringify(d)).join('\n').trim()}).then(r => r.status == 200 ? r.text() : Promise.reject(new Error('error ' + r.status))).then(t => t.split('\n').filter(d => d).map(d => JSON.parse(d)));
+const rpc = (u, c, d) => fetch(`/?user=${u}&checkpoint=${c}`,{method: "POST", body: d.map(d => JSON.stringify(d)+"\n").join("").trim()}).then(r => r.status == 200 ? r.text() : Promise.reject(new Error('error ' + r.status))).then(t => t.split('\n').filter(d => d).map(d => JSON.parse(d)));
 const intToBinary = (i, r = []) => {
   while (i>0) { r.unshift(i & 0xff); i >>= 8; }
   while (r.length % 8 !== 0) r.unshift(0);
@@ -272,14 +278,14 @@ function App() {
     setNewAttribute("");
     setAttributeInputs(attributes.reduce((t, a) => Object.assign(t, {["a"+a]: a, ["v"+a]: entity[a]}), {}));
   }, [entity]);
-  async function onSearchKeyDown(e) {
+  function onSearchKeyDown(e) {
     if (e.keyCode != 13) return;
-    if (results.length > 0) {
-      setEntity(results[0].id);
-    } else {
-      const id = newId(); await dbChange(id, {title: search}); setEntity(id);
-      setTimeout(() => document.querySelector("textarea").focus(), 100);
-    }
+    if (results.length == 0) return onNew();
+    setEntity(results[0].id);
+  }
+  async function onNew() {
+    const id = newId(); await dbChange(id, {title: search}); setEntity(id);
+    setTimeout(() => document.querySelector("textarea").focus(), 100);
   }
   async function onNewAttribute() {
     const a = newAttribute;
@@ -311,7 +317,7 @@ function App() {
   }
   function renderSearch() {
     return h("div", {}, results.map(e =>
-      h("div", {k: "result p-2 border-b truncate", key: e.id, onmouseup: () => setEntity(e.id)},
+      h("div", {k: "result p-2 border-b truncate", key: e.id, onmousedown: () => setEntity(e.id)},
         e.title, h("span", {k: "faded ml-2"}, (e.content||"").slice(0, 50)))));
   }
   function renderEntity() {
@@ -374,6 +380,7 @@ function App() {
   }
   return h("div", {k: "container"}, [
     h("div", {k: "flex border-b"}, [
+      h("button", {k: "button", onclick: () => setEntity(""), innerHTML: `<svg viewBox="0 0 24 24" class="icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`}),
       h("input", {
         id: "search",
         k: "input flex-1",
@@ -385,6 +392,7 @@ function App() {
         onfocus: () => setSearchFocused(true),
         onblur: () => setSearchFocused(false)
       }),
+      h("button", {k: "button", onclick: onNew, innerHTML: `<svg viewBox="0 0 24 24" class="icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`}),
     ]),
     id && !searchFocused ? renderEntity() : renderSearch()
   ]);
@@ -393,11 +401,15 @@ async function onUnlock(e) {
   try {
     if (e) e.preventDefault();
     localStorage.username = usernameField.value || localStorage.username;
-    if (!localStorage.username || !passwordField.value) return alert("missing username/password");
     const usernameHash = await cryptoHash(localStorage.username);
+    if (pinField.value && !passwordField.value && localStorage.pin) {
+      passwordField.value = await cryptoDecrypt(await cryptoKeyFromPassword(pinField.value, usernameHash), localStorage.pin);
+    }
+    if (!localStorage.username || !passwordField.value) return alert("missing username/password");
     const apiKey = await cryptoKeyFromPassword(passwordField.value, await cryptoHash("api" + usernameHash));
     state.masterKey = await cryptoKeyFromPassword(passwordField.value, await cryptoHash("password" + usernameHash));
     state.apiKey = apiKey;
+    if (pinField.value) localStorage.pin = await cryptoEncrypt(await cryptoKeyFromPassword(pinField.value, usernameHash), passwordField.value);
     const datums = (await dbTransact("datums", "readonly", (s) => dbWrap(s.getAll()))).sort((a, b) => a[1] > b[1]);
     for (let d of datums) {
       d[3] = JSON.parse(await cryptoDecrypt(state.masterKey, d[3]));
@@ -423,7 +435,7 @@ async function onUnlock(e) {
           ds.filter(d => d[0]).forEach(d => s.put(d, d[1] + d[0] + d[2]));
         });
         localStorage.checkpoint = checkpoint + ds.length;
-        console.log("sync", {checkpoint: checkpoint, up: up.length, down: ds.length});
+        console.log("sync", {checkpoint, up: up.length, down: ds.length});
       } catch (e) {
         console.error("sync error", e);
       }
@@ -437,6 +449,10 @@ async function onUnlock(e) {
     alert("error decrypting");
   }
 }
+const onSignout = async () => {
+  localStorage.clear(); await dbClear();
+  window.location.hash = ""; window.location.reload();
+};
 (async () => {
   document.addEventListener("keydown", e => {
     if (!(e.ctrlKey && e.key == "l") && !(e.metaKey && e.key == "m")) return;
@@ -446,11 +462,8 @@ async function onUnlock(e) {
   if ("serviceWorker" in navigator && window.location.hostname !== "localhost") {
     navigator.serviceWorker.register("/sw.js", { scope: "/" });
   }
-  if (localStorage.username) { usernameField.style.display = 'none'; }
-  if (window.location.hash === "#signout") {
-    localStorage.clear(); await dbClear();
-    window.location.hash = ""; window.location.reload();
-  }
+  if (localStorage.username) { usernameField.classList.add("hidden"); }
+  if (window.location.hash === "#signout") onSignout();
 })();
 </script>
 
