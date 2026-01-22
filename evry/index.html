@@ -13,7 +13,14 @@ body { font-family: var(--font); font-size: var(--size); line-height: 1.33; marg
 .input { padding: 8px; min-width: 200px; border: none; background: transparent; color: var(--foreground); line-height: 1.333; font-size: var(--size); font-family: var(--font); outline: 0; border-radius: 0; }
 .button { color: var(--background); background: var(--foreground); font-family: var(--font); padding: 8px; border: 0; font-size: var(--size); cursor: pointer; text-align: left; }
 .container { max-width: 800px; border: 1px solid var(--border); border-width: 0 1px 0 1px; min-height: 100vh; }
+.result:hover { background: var(--foreground); color: var(--background); cursor: pointer; }
+.flex { display: flex; }
+.flex-1 { flex: 1; }
+.p-2 { padding: 8px; }
+.ml-2 { margin-left: 8px; }
 .w-full { width: 100%; }
+.error { color: red; }
+.faded { opacity: 0.6; }
 .border-r, .border-t, .border-b { border: 0 solid var(--border); }
 .border-t { border-top-width: 1px; }
 .border-b { border-bottom-width: 1px; }
@@ -37,26 +44,27 @@ const intToBinary = (i, r = []) => {
   return Uint8Array.from(r);
 }
 const stringToBytes = (i) => new TextEncoder().encode(i);
-const bytesToString = (i) => new TextEncoder().decode(i);
+const bytesToString = (i) => new TextDecoder().decode(i);
 function base32ToBytes(s) {
   let a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567=";
-  let x, bits = 0, o = "", len = s.length;
+  let x, bits = 0, o = [], len = s.length;
   for (let i = 0; i < len; i += 1) {
     let v = a.indexOf(s.charAt(i).toUpperCase());
     if (v < 0 || v >= 32) continue;
     x = (x << 5) | v;
     bits += 5;
     if (bits < 8) continue;
-    o = o + String.fromCharCode((x >> (bits - 8)) & 0xff);
+    o.push((x >> (bits - 8)) & 0xff);
     bits -= 8;
   }
   if (bits > 0) {
     let c = ((x << (8 - bits)) & 0xff) >> (8 - bits);
-    if (c !== 0) o = o + String.fromCharCode(c);
+    if (c !== 0) o.push(c);
   }
-  return o;
+  return new Uint8Array(o);
 }
 function bytesToBase32(v) {
+  v = new Uint8Array(v);
   let a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   let b = 0, bl = 0, r = "";
   for (const i of v) {
@@ -68,16 +76,381 @@ function bytesToBase32(v) {
 }
 const cryptoRandom = (l) => crypto.getRandomValues(new Uint8Array(l)).then(bytesToBase32);
 const cryptoHash = (i) => crypto.subtle.digest("SHA-256", stringToBytes(i)).then(bytesToBase32);
-const cryptoKeyFromPassword = await (p, s) => {
+const cryptoKeyFromPassword = async (pass, salt) => {
   const key = await crypto.subtle.deriveKey(
     { name: "PBKDF2", salt: base32ToBytes(salt), iterations: 100000, hash: "SHA-256" },
     await crypto.subtle.importKey(
-      "raw", stringToBytes(password),
+      "raw", stringToBytes(pass),
       { name: "PBKDF2" }, false, ["deriveKey"]
     ),
     { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]
   );
   return bytesToBase32(await crypto.subtle.exportKey("raw", key));
 };
+const cryptoKeyFromRaw = (k) => crypto.subtle.importKey("raw", base32ToBytes(k), {name: "AES-GCM", length: 256}, true, ["encrypt", "decrypt"]);
+const cryptoEncrypt = async (rawKey, value, raw = false) => {
+  const iv = crypto.getRandomValues(new Uint8Array(96));
+  const key = await cryptoKeyFromRaw(rawKey);
+  value = raw ? value : stringToBytes(value);
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, key, value);
+  return ["1", bytesToBase32(iv), bytesToBase32(encrypted)].join(".");
+};
+const cryptoDecrypt = async (rawKey, value, raw = false) => {
+  const parts = value.split(".");
+  const iv = base32ToBytes(parts[1]);
+  const buf = base32ToBytes(parts[2]);
+  const key = await cryptoKeyFromRaw(rawKey);
+  const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, key, buf);
+  return raw ? decrypted : bytesToString(decrypted);
+};
+const generateTotp = async (secret, digits = 6) => {
+  var s = stringToBytes(decodeBase32(secret));
+  var input = intToBinary(Math.floor(Date.now() / 1000 / 30));
+  var alg = { name: "HMAC", hash: "SHA-1" };
+  var key = await crypto.subtle.importKey("raw", s, alg, true, ["sign"]);
+  var val = new Uint8Array(await crypto.subtle.sign(alg, key, input));
+  var offset = val[val.length - 1] & 0xf;
+  var code = ((val[offset] & 0x7f) << 24) | ((val[offset + 1] & 0xff) << 16) | ((val[offset + 2] & 0xff) << 8) | (val[offset + 3] & 0xff);
+  var str = (code % 10 ** digits).toString();
+  while (str.length < digits) str = "0" + str;
+  return str;
+};
+const dbWrap = (r) => new Promise((resolve, reject) => {
+  r.onerror = () => reject(r.error);
+  r.onsuccess = () => resolve(r.result);
+});
+const dbOpenReq = indexedDB.open("evry", 1);
+dbOpenReq.onupgradeneeded = () => {
+  dbOpenReq.result.createObjectStore("datums"); // [id, rev, key, val, synced]
+};
+const dbPromise = dbWrap(dbOpenReq);
+const dbTransact = (store, type, callback) => new Promise(async (y, n, r) => {
+  const t = (await dbPromise).transaction(store, type);
+  t.onabort = t.onerror = () => n(t.error);
+  t.oncomplete = async () => y(await r);
+  r = callback(t.objectStore(store));
+});
+const dbClear = () => dbTransact("datums", "readwrite", (s) => s.clear());
+const state = { datums: [], entities: {}, entitiesRevs: {} };
+const dbChange = async (id, changes, rev = newId(), d = []) => {
+  for (let k in changes) {
+    const v = await cryptoEncrypt(state.masterKey, JSON.stringify(changes[k]));
+    d.push([id, rev, k, v, false]);
+    dbIndex([id, rev, k, changes[k], false]);
+  }
+  return dbTransact("datums", "readwrite", (s) => {
+    d.forEach((d) => s.put(d, d[1]+d[0]+d[2]));
+  });
+};
+let dbIndexHandle;
+const dbIndex = (d) => {
+  const d2 = state.datums.find(d2 => d[0] == d2[0] && d[1] == d2[1] && d[2] == d2[2])
+  if (!d2) { state.datums.push(d); } else { d2[4] = d[4]; }
+  if (d[1] > (state.entitiesRevs[d[0]+d[2]] || "")) {
+    const e = state.entities[d[0]] || (state.entities[d[0]] = {id: d[0]});
+    e[d[2]] = d[3];
+    e.rev = d[1];
+    state.entitiesRevs[d[0]+d[2]] = d[1];
+  }
+  if (dbIndexHandle) clearTimeout(dbIndexHandle);
+  dbIndexHandle = setTimeout(() => { dbIndexHandle = null; redraw(); }, 500);
+};
+let hooks;
+let hooksIndex = 0;
+let forceUpdate;
+const h = (e, p = {}, ...c) => ({ e, p, c: c.length === 1 && Array.isArray(c[0]) ? c[0] : c });
+const changed = (a, b) => !a || b.some((arg, i) => arg !== a[i]);
+const getHook = (value) => hooks[hooksIndex++] || (hooks.push({value}), hooks[hooks.length-1]);
+const useReducer = (reducer, initial) => {
+  const hook = getHook(initial);
+  const update = forceUpdate;
+  return [hook.value, (action) => {
+    hook.value = reducer(hook.value, action);
+    setTimeout(update, 1);
+  }];
+};
+const useState = (initial) => useReducer((_, v) => v, initial);
+const useEffect = (cb, args = []) => {
+  const hook = getHook();
+  if (changed(hook.value, args)) { hook.value = args; hook.cb = cb; }
+};
+const render = (vlist, dom, ns) => {
+  vlist = [].concat(vlist).filter((x) => x);
+  let ids = {};
+  let hs = dom.h || {};
+  dom.h = {};
+  vlist.forEach((v, i) => {
+    forceUpdate = () => render(vlist, dom);
+    const id = newId();
+    while (v && typeof v.e === "function") {
+      const k =
+        (v.p && v.p.key) || "" + v.e + (ids[v.e] = (ids[v.e] || 1) + 1);
+      hooks = hs[k] || [];
+      hooksIndex = 0;
+      v.p.children = v.c;
+      v = v.e(v.p, forceUpdate);
+      dom.h[k] = hooks;
+    }
+    if (!v) return;
+    const nsURI = ns || (v.p && v.p.xmlns);
+    const createNode = () => v.e ? nsURI
+        ? document.createElementNS(nsURI, v.e)
+        : document.createElement(v.e)
+      : document.createTextNode(v);
+    let node = dom.childNodes[i];
+    if (!node || (v.e ? node.e !== v.e : node.data !== v)) {
+      node = dom.insertBefore(createNode(), node);
+    }
+    if (v.e) {
+      node.e = v.e;
+      for (const propName in node.p || {}) {
+        const targetName = propName === "k" ? "className" : propName;
+        if (targetName != "children" && targetName != "key" && !(propName in v.p)) {
+          node[targetName] = null;
+        }
+      }
+      for (const propName in v.p) {
+        const targetName = propName === "k" ? "className" : propName;
+        let expectedValue = v.p[propName];
+        if (v.e === "img" && propName === "src") {
+          expectedValue = new URL(v.p[propName], window.location.href).href;
+        }
+        if (node[targetName] !== expectedValue) {
+          if (nsURI) {
+            node.setAttribute(targetName, v.p[propName]);
+          } else if (targetName.startsWith("data-")) {
+            node.dataset[targetName.slice(5)] = v.p[propName];
+          } else {
+            node[targetName] = v.p[propName];
+          }
+        }
+      }
+      if (!v.p.innerHTML) render(v.c, node, nsURI);
+      node.p = v.p;
+    } else {
+      node.data = v;
+    }
+  });
+  Object.values(dom.h).map((componentHooks) =>
+    componentHooks.map((h) => {
+      if (h.cb) { h.cleanup && h.cleanup(); h.cleanup = h.cb(); h.cb = 0; }
+    })
+  );
+  Object.keys(hs).filter((k) => !dom.h[k])
+    .map((k) => hs[k].map((h) => h.cleanup && h.cleanup()));
+  for (let child; (child = dom.childNodes[vlist.length]); ) {
+    render([], dom.removeChild(child));
+  }
+};
+const redraw = () => {
+  try { render(h(App), document.getElementById("root")); } catch (e) {
+    console.error("ERROR", e);
+    root.innerHTML = `<div class="error" style="padding:20vh 0;text-align:center">${e.message}</div>`;
+  }
+};
+const RESERVED = ["id", "rev", "title", "content", "deleted"];
+function App() {
+  const [id, setId] = useState(window.location.hash.slice(1));
+  const [search, setSearch] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [newAttribute, setNewAttribute] = useState("");
+  const [attributeInputs, setAttributeInputs] = useState({});
+  const entity = state.entities[id];
+  const attributes = Object.keys(entity || {}).filter(k => !RESERVED.includes(k) && (entity||{})[k] != null).sort();
+  const results = Object.values(state.entities).filter(e => !e.deleted)
+    .filter(e => (e.title||"").includes(search))
+    .sort((a, b) => a.rev > b.rev ? -1 : 1);
+  useEffect(() => {
+    if (!id) document.getElementById("search").focus();
+  }, []);
+  useEffect(() => {
+    if (!entity) return;
+    setTitle(entity.title || "");
+    setContent(entity.content || "");
+    setNewAttribute("");
+    setAttributeInputs(attributes.reduce((t, a) => Object.assign(t, {["a"+a]: a, ["v"+a]: entity[a]}), {}));
+  }, [entity]);
+  async function onSearchKeyDown(e) {
+    if (e.keyCode != 13) return;
+    if (results.length > 0) {
+      setEntity(results[0].id);
+    } else {
+      const id = newId(); await dbChange(id, {title: search}); setEntity(id);
+      setTimeout(() => document.querySelector("textarea").focus(), 100);
+    }
+  }
+  async function onNewAttribute() {
+    const a = newAttribute;
+    if (!a || RESERVED.includes(a)) return;
+    await dbChange(id, {[a]: ""});
+    setAttributeInputs({...attributeInputs, ["a"+a]: a, ["v"+a]: ""});
+    setNewAttribute("");
+  }
+  async function onUpdateAttribute(prev, next) {
+    if (RESERVED.includes(next)) return;
+    if (next == "") { dbChange(id, {[prev]: null}); return; }
+    if (prev == next) return;
+    setAttributeInputs({...attributeInputs, ["a"+next]: next, ["v"+next]: entity[prev]});
+    await dbChange(id, {[prev]: null, [next]: entity[prev]});
+  }
+  function onChange(attribute, value) {
+    if (entity[attribute] == value) return;
+    dbChange(id, {[attribute]: value});
+  }
+  function onDelete() {
+    if (!confirm("are you sure?")) return;
+    dbChange(id, {deleted: Date.now()});
+    setId("");
+  }
+  function setEntity(id) {
+    setId(id);
+    window.location.hash = id;
+    document.querySelector("#search").blur();
+  }
+  function renderSearch() {
+    return h("div", {}, results.map(e =>
+      h("div", {k: "result p-2 border-b truncate", key: e.id, onmouseup: () => setEntity(e.id)},
+        e.title, h("span", {k: "faded ml-2"}, (e.content||"").slice(0, 50)))));
+  }
+  function renderEntity() {
+    return h("div", {k: "flex", style:"flex-direction:column;"}, [
+      h("input", {
+        k: "input flex-1 border-b",
+        style: "font-size:22px;",
+        placeholder: "title",
+        tabindex: 2,
+        value: title,
+        oninput: e => setTitle(e.target.value),
+        onchange: e => onChange("title", e.target.value),
+      }),
+      ...attributes.map((a, i) => h("div", {k: "flex border-b", key: a}, [
+        h("input", {
+          k: "input flex-1 border-r",
+          placeholder: "attribute",
+          value: attributeInputs["a"+a]||"",
+          oninput: e => setAttributeInputs({...attributeInputs, ["a"+a]: e.target.value}),
+          onchange: e => onUpdateAttribute(a, e.target.value),
+        }),
+        h("input", {
+          k: "input flex-1",
+          placeholder: "value",
+          value: attributeInputs["v"+a]||"",
+          oninput: e => setAttributeInputs({...attributeInputs, ["v"+a]: e.target.value}),
+          onchange: e => onChange(a, e.target.value),
+        }),
+      ])),
+      h("input", {
+        k: "input border-b",
+        placeholder: "new attribute",
+        value: newAttribute,
+        oninput: e => setNewAttribute(e.target.value),
+        onchange: onNewAttribute,
+      }),
+      h("textarea", {
+        k: "input border-b",
+        style: "min-height:calc(100vh - "+(((attributes.length+1)*39)+151)+"px);resize:none;",
+        placeholder: "content",
+        tabindex: 3,
+        spellcheck: "false",
+        value: content,
+        oninput: e => setContent(e.target.value),
+        onchange: e => onChange("content", e.target.value),
+      }),
+      entity ? h("div", { k: "flex border-b", style: "padding:4px 8px;font-size:14px;" }, [
+        h("div", {}, formatDate(idDate(entity.id))),
+        h("div", {k: "flex-1"}),
+        h("div", {}, formatDate(idDate(entity.rev))),
+      ]) : null,
+      h("div", { k: "flex border-b", style: "padding:4px 8px;font-size:14px;" }, [
+        h("div", {}, localStorage.checkpoint || "0"),
+        h("div", {k: "flex-1"}),
+        h("a", {onclick: onDelete}, "delete"),
+        h("div", {k: "flex-1"}),
+        h("div", {}, localStorage.username || ""),
+      ]),
+    ]);
+  }
+  return h("div", {k: "container"}, [
+    h("div", {k: "flex border-b"}, [
+      h("input", {
+        id: "search",
+        k: "input flex-1",
+        placeholder: "search...",
+        tabindex: 1,
+        value: search,
+        oninput: e => setSearch(e.target.value),
+        onkeydown: onSearchKeyDown,
+        onfocus: () => setSearchFocused(true),
+        onblur: () => setSearchFocused(false)
+      }),
+    ]),
+    id && !searchFocused ? renderEntity() : renderSearch()
+  ]);
+}
+async function onUnlock(e) {
+  try {
+    if (e) e.preventDefault();
+    localStorage.username = usernameField.value || localStorage.username;
+    if (!localStorage.username || !passwordField.value) return alert("missing username/password");
+    const usernameHash = await cryptoHash(localStorage.username);
+    const apiKey = await cryptoKeyFromPassword(passwordField.value, await cryptoHash("api" + usernameHash));
+    state.masterKey = await cryptoKeyFromPassword(passwordField.value, await cryptoHash("password" + usernameHash));
+    state.apiKey = apiKey;
+    const datums = (await dbTransact("datums", "readonly", (s) => dbWrap(s.getAll()))).sort((a, b) => a[1] > b[1]);
+    for (let d of datums) {
+      d[3] = JSON.parse(await cryptoDecrypt(state.masterKey, d[3]));
+      dbIndex(d);
+    }
+    const sync = async () => {
+      const sel = document.createElement("style"); sel.innerText = `:root{--border:cornflowerblue;}`;
+      document.body.appendChild(sel);
+      try {
+        const checkpoint = parseInt(localStorage.checkpoint || "0");
+        const up = state.datums.filter(d => !d[4]).map(d => d.slice(0, 4));
+        for (let d of up) {
+          d[3] = await cryptoEncrypt(state.masterKey, JSON.stringify(d[3]));
+        }
+        const ds = await rpc(state.apiKey, checkpoint, up);
+        for (let d of ds) {
+          try {
+            const v = JSON.parse(await cryptoDecrypt(state.masterKey, d[3]));
+            dbIndex([d[0], d[1], d[2], v, true]);
+          } catch (e) { d[0] = null; }
+        }
+        await dbTransact("datums", "readwrite", (s) => {
+          ds.filter(d => d[0]).forEach(d => s.put(d, d[1] + d[0] + d[2]));
+        });
+        localStorage.checkpoint = checkpoint + ds.length;
+        console.log("sync", {checkpoint: checkpoint, up: up.length, down: ds.length});
+      } catch (e) {
+        console.error("sync error", e);
+      }
+      setTimeout(() => document.body.removeChild(sel), 500);
+    };
+    sync();
+    setInterval(sync, 15000);
+    redraw();
+  } catch (e) {
+    console.error("unlock error", e);
+    alert("error decrypting");
+  }
+}
+(async () => {
+  document.addEventListener("keydown", e => {
+    if (!(e.ctrlKey && e.key == "l") && !(e.metaKey && e.key == "m")) return;
+    document.getElementById("search").focus();
+    document.getElementById("search").select();
+  });
+  if ("serviceWorker" in navigator && window.location.hostname !== "localhost") {
+    navigator.serviceWorker.register("/sw.js", { scope: "/" });
+  }
+  if (localStorage.username) { usernameField.style.display = 'none'; }
+  if (window.location.hash === "#signout") {
+    localStorage.clear(); await dbClear();
+    window.location.hash = ""; window.location.reload();
+  }
+})();
 </script>
 
