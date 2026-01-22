@@ -1,7 +1,7 @@
 CFLAGS ?= -Wall -Wextra -std=gnu99
 LDFLAGS = -lX11 -lXext
 
-all: build kdm kwm kbar kterm ked kagent
+all: build kdm kwm kbar kterm ked kagent tunel
 
 clean:
 	rm -f build
@@ -26,6 +26,13 @@ ked:
 
 kagent:
 	go build -o build/$@ agent.go
+
+tunel:
+	GOOS=linux GOARCH=amd64 go build -v -ldflags "-s -w" -installsuffix cgo -o build/tunel tunel.go
+tunel-deploy-server:
+	scp tunel front:tunel && ssh front "sudo systemctl stop tunel" && ssh front "sudo mv tunel /usr/bin/tunel" && ssh front "sudo systemctl start tunel"
+tunel-deploy-client:
+	scp tunel op@10.0.0.131:tunel && ssh op@10.0.0.131 "sudo systemctl stop tunel" && ssh op@10.0.0.131 "sudo mv tunel /usr/bin/tunel" && ssh op@10.0.0.131 "sudo systemctl start tunel"
 
 
 install: all

@@ -59,9 +59,21 @@ func main() {
 			history = append(history, assistantMsg)
 
 			for _, tc := range toolCalls {
-				fmt.Printf("\n[Calling %s: %s]\n", tc.Function.Name, tc.Function.Arguments)
+				args := map[string]interface{}{}
+				json.Unmarshal([]byte(tc.Function.Arguments), &args)
+				if tc.Function.Name == "read" {
+					fmt.Printf("\nREAD %v\n", args["path"])
+				} else if tc.Function.Name == "edit" {
+					fmt.Printf("\nEDIT %v (%d)\n", args["path"], len(args["new_text"].(string)))
+				} else if tc.Function.Name == "write" {
+					fmt.Printf("\nWRITE %v (%d)\n", args["path"], len(args["content"].(string)))
+				} else if tc.Function.Name == "bash" {
+					fmt.Printf("\nBASH %v\n", args["command"])
+				} else {
+					fmt.Printf("\n%s: %s\n", strings.ToUpper(tc.Function.Name), tc.Function.Arguments)
+				}
 				result := executeTool(tc.Function.Name, tc.Function.Arguments, workDir)
-				fmt.Printf("[Result: %s]\n\n", truncate(result, 200))
+				//fmt.Printf("[Result: %s]\n\n", truncate(result, 200))
 				history = append(history, Message{
 					Role:       "tool",
 					ToolCallID: tc.ID,
@@ -74,7 +86,7 @@ func main() {
 
 type Message struct {
 	Role       string     `json:"role"`
-	Content    string     `json:"content,omitempty"`
+	Content    string     `json:"content"`
 	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
 	ToolCallID string     `json:"tool_call_id,omitempty"`
 }

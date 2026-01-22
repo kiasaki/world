@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -740,15 +741,7 @@ func (e *Editor) Delete() {
 	e.X -= 1
 }
 
-type Termios struct {
-	Iflag  uint32
-	Oflag  uint32
-	Cflag  uint32
-	Lflag  uint32
-	Cc     [20]byte
-	Ispeed uint32
-	Ospeed uint32
-}
+type Termios syscall.Termios
 
 var originalTermios *Termios
 
@@ -774,15 +767,23 @@ func termReset() {
 }
 
 func termGetAttr(fd uintptr) *Termios {
+	getTermios := uintptr(0x5401)
+	if runtime.GOOS == "darwin" {
+		getTermios = 0x40487413
+	}
 	var termios = &Termios{}
-	if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, syscall.TCGETS, uintptr(unsafe.Pointer(termios))); err != 0 {
+	if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, getTermios, uintptr(unsafe.Pointer(termios))); err != 0 {
 		die(fmt.Errorf("problem getting terminal attributes: %s\n", err))
 	}
 	return termios
 }
 
 func termSetAttr(fd uintptr, termios *Termios) error {
-	if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, uintptr(syscall.TCSETS+1), uintptr(unsafe.Pointer(termios))); err != 0 {
+	setTermios := uintptr(0x5402) // +1
+	if runtime.GOOS == "darwin" {
+		setTermios = 0x80487414
+	}
+	if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, setTermios, uintptr(unsafe.Pointer(termios))); err != 0 {
 		return err
 	}
 	return nil

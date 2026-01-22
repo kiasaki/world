@@ -16,6 +16,7 @@ body { font-family: var(--font); font-size: var(--size); line-height: 1.33; marg
 .container { max-width: 800px; border: 1px solid var(--border); border-width: 0 1px 0 1px; min-height: 100vh; }
 .result:hover { background: var(--foreground); color: var(--background); cursor: pointer; }
 .icon { width: 20px; height: 20px; vertical-align:middle; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .block { display: block; }
 .flex { display: flex; }
 .flex-1 { flex: 1; }
@@ -43,7 +44,7 @@ body { font-family: var(--font); font-size: var(--size); line-height: 1.33; marg
 const newId = () => Date.now()+(""+Math.random()).slice(-5);
 const idDate = (i) => new Date(parseInt(i.slice(0, -5)));
 const formatDate = (d) => d.toLocaleString('en-CA',{hour12:0}).slice(0,17).replace(",","");
-const rpc = (u, c, d) => fetch(`/?user=${u}&checkpoint=${c}`,{method: "POST", body: d.map(d => JSON.stringify(d)+"\n").join("").trim()}).then(r => r.status == 200 ? r.text() : Promise.reject(new Error('error ' + r.status))).then(t => t.split('\n').filter(d => d).map(d => JSON.parse(d)));
+const rpc = (u, c, d) => fetch(`/?user=${u}&checkpoint=${c}`,{method: "POST", body: d.map(d => JSON.stringify(d)+"\n").join("")}).then(r => r.status == 200 ? r.text() : Promise.reject(new Error('error ' + r.status))).then(t => t.split('\n').filter(d => d).map(d => JSON.parse(d)));
 const intToBinary = (i, r = []) => {
   while (i>0) { r.unshift(i & 0xff); i >>= 8; }
   while (r.length % 8 !== 0) r.unshift(0);
