@@ -267,7 +267,7 @@ function App() {
   const entity = state.entities[id];
   const attributes = Object.keys(entity || {}).filter(k => !RESERVED.includes(k) && (entity||{})[k] != null).sort();
   const results = Object.values(state.entities).filter(e => !e.deleted)
-    .filter(e => (e.title||"").includes(search))
+    .filter(e => (e.title||"").toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.rev > b.rev ? -1 : 1);
   useEffect(() => {
     if (!id) document.getElementById("search").focus();
@@ -381,7 +381,7 @@ function App() {
   }
   return h("div", {k: "container"}, [
     h("div", {k: "flex border-b"}, [
-      h("button", {k: "button", onclick: () => setEntity(""), innerHTML: `<svg viewBox="0 0 24 24" class="icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`}),
+      h("button", {k: "button", onclick: () => {setSearch("");setEntity("")}, innerHTML: `<svg viewBox="0 0 24 24" class="icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`}),
       h("input", {
         id: "search",
         k: "input flex-1",
