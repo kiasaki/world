@@ -91,6 +91,7 @@
     <p>i've always seems people (often from the "second brain" crowd) with impresive personal websites sprawling with information and links.</p>
     <p>the rest of this page is my attempt to head in that direction while keeping things simple and minimal. but really it's mostly for myself, be happy if you find a tidbit that's useful to you.</p>
 		<a href="#archives">archives</a> &mdash;
+		<a href="#gallery">gallery</a> &mdash;
 		<a href="#blogroll">blogroll</a> &mdash;
 		<a href="#books">books</a> &mdash;
 		<a href="#backpack">backpack</a> &mdash;
@@ -110,6 +111,48 @@
     </li><li>2014 oct <a href="/boring-tech.html">boring tech is the best tech</a>
 		</li><li>2014 apr <a href="/equality-of-languages.html">equality of languages</a>
     </li></ul>
+  </div>
+
+  <div class="mb-8" id="gallery">
+    <h2 class="title">gallery</h2>
+		<div id="gallery">
+			<div class="gallery-row">
+				<img src="thumbnails/20241207_130319.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20241225_142115.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20241225_142138.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20241226_080518.jpg" alt="" class="thumbnail">
+			</div>
+			<div class="gallery-row">
+				<img src="thumbnails/20250108_145355.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20250312_113123.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20250403_065233.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20250506_023439.jpg" alt="" class="thumbnail">
+			</div>
+			<div class="gallery-row">
+				<img src="thumbnails/20250513_084046.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20250518_123306.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20250622_203028.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20250706_212603.jpg" alt="" class="thumbnail">
+			</div>
+			<div class="gallery-row">
+				<img src="thumbnails/20250727_202748.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20250802_110044.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20250906_094932.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20250908_063009.jpg" alt="" class="thumbnail">
+			</div>
+			<div class="gallery-row">
+				<img src="thumbnails/20250909_200943.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20250925_184330.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20250929_190759.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20251001_135038.jpg" alt="" class="thumbnail">
+			</div>
+			<div class="gallery-row">
+				<img src="thumbnails/20251003_182839.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20251221_145152.jpg" alt="" class="thumbnail">
+				<img src="thumbnails/20260113_083143.jpg" alt="" class="thumbnail">
+			</div>
+		</div>
+
   </div>
 
   <div class="mb-8" id="blogroll">
@@ -496,5 +539,128 @@
     <p>required equipment, varries depending on size, but at 24m: pfd for every passenger, reboarding device, buyant heaving line, flashlight, flares 12x, bailer / bilge pump, anchor, manual propelling device, navigation lights, compass, sound device, 10BC fire extinguisher, axes, fire buckets</p>
     <p>right of way: sailboats and canoes first, coming from back: you move, colliding with startboard: they move, colliding with port: you move out (behind), face to face: pass on right</p>
 	</div>
+
+<style>
+.gallery-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.thumbnail {
+  width: calc(25% - 9px);
+  height: 185px;
+  filter: grayscale(1);
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+.thumbnail:hover {
+  opacity: 0.7;
+}
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1;
+  overflow: hidden;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgb(0,0,0);
+  background-color: rgba(0,0,0,0.9);
+}
+.modal-content {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+.close {
+  position: absolute;
+  top: 15px;
+  right: 35px;
+  color: #f1f1f1;
+  font-size: 40px;
+  font-weight: bold;
+  transition: 0.3s;
+  cursor: pointer;
+}
+.close:hover,
+.close:focus {
+  color: #bbb;
+  text-decoration: none;
+}
+.prev,
+.next {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  width: auto;
+  padding: 16px;
+  margin-top: -50px;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  transition: 0.6s ease;
+  border-radius: 0 3px 3px 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.next {
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+.prev:hover,
+.next:hover {
+  color: #bbb;
+  background-color: rgba(0,0,0,0.8);
+  text-decoration: none;
+}
+</style>
+
+<div id="gallery-modal" class="modal">
+  <span class="close" onclick="closeGallery()">&times;</span>
+  <img class="modal-content" id="gallery-img">
+  <a class="prev" onclick="changeImage(-1)">&#10094;</a>
+  <a class="next" onclick="changeImage(1)">&#10095;</a>
+</div>
+
+<script>
+var modal = document.getElementById('gallery-modal');
+var modalImg = document.getElementById('gallery-img');
+var thumbnails = document.querySelectorAll('.thumbnail');
+var images = Array.from(thumbnails).map(img => img.src.replace('thumbnails/', 'pictures/'));
+var currentIndex = 0;
+
+thumbnails.forEach((thumb, index) => {
+  thumb.onclick = function() {
+    openGallery(index);
+  };
+});
+
+function openGallery(index) {
+  currentIndex = index;
+  modal.style.display = "block";
+  modalImg.src = images[currentIndex];
+}
+
+function closeGallery() {
+  modal.style.display = "none";
+}
+
+function changeImage(direction) {
+  currentIndex += direction;
+  if (currentIndex < 0) currentIndex = images.length - 1;
+  if (currentIndex >= images.length) currentIndex = 0;
+  modalImg.src = images[currentIndex];
+}
+
+document.addEventListener('keydown', function(e) {
+  if (modal.style.display === "block") {
+    if (e.key === 'Escape') closeGallery();
+    else if (e.key === 'ArrowLeft') changeImage(-1);
+    else if (e.key === 'ArrowRight') changeImage(1);
+  }
+});
+</script>
 
 </div>
