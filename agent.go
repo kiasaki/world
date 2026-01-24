@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -25,7 +27,7 @@ func main() {
 	if bs, err := os.ReadFile("AGENTS.md"); err == nil {
 		projectContext = "The following project context files have been loaded:\n\n## AGENTS.md\n\n" + string(bs) + "\n"
 	}
-	systemPrompt := fmt.Sprintf("You are a helpful coding assistant. Use tools when needed to help the user.\n\nAvailable tools:\n- read\n- bash\n- edit\n- write\n\nGuidelines:\n\n- Use read to examine files before editing. You must use this tool instead of cat or sed.\n- Use edit for precise changes (old text must match exactly).\n- Use write only for new files or complete rewrites\n- When summarizing your actions, output plain text directly - do NOT use cat or bash to display what you did.\n- Be concise in your responses.\n- Show file paths clearly when working with files.\n\n%s\nCurrent date and time: %s\nCurrent working directory: %s", projectContext, time.Now().Format("2006-01-02 15:04"), workDir)
+	systemPrompt := fmt.Sprintf("You are a helpful coding assistant. Use tools when needed to help the user.\n\nAvailable tools:\n- read\n- bash\n- edit\n- write\n- web_search\n- web_fetch\n\nGuidelines:\n\n- Use read to examine files before editing. You must use this tool instead of cat or sed.\n- Use edit for precise changes (old text must match exactly).\n- Use write only for new files or complete rewrites\n- When summarizing your actions, output plain text directly - do NOT use cat or bash to display what you did.\n- Be concise in your responses.\n- Show file paths clearly when working with files.\n\n%s\nCurrent date and time: %s\nCurrent working directory: %s", projectContext, time.Now().Format("2006-01-02 15:04"), workDir)
 	history = append(history, Message{Role: "system", Content: systemPrompt})
 
 	for {
@@ -69,11 +71,20 @@ func main() {
 					fmt.Printf("\nWRITE %v (%d)\n", args["path"], len(args["content"].(string)))
 				} else if tc.Function.Name == "bash" {
 					fmt.Printf("\nBASH %v\n", args["command"])
+				} else if tc.Function.Name == "web_search" {
+					fmt.Printf("\nWEB SEARCH %v\n", args["query"])
+				} else if tc.Function.Name == "web_fetch" {
+					fmt.Printf("\nWEB FETCH %v\n", args["url"])
 				} else {
 					fmt.Printf("\n%s: %s\n", strings.ToUpper(tc.Function.Name), tc.Function.Arguments)
 				}
 				result := executeTool(tc.Function.Name, tc.Function.Arguments, workDir)
 				//fmt.Printf("[Result: %s]\n\n", truncate(result, 200))
+				if tc.Function.Name == "web_fetch" {
+					fmt.Println("===================================================")
+					fmt.Println(result)
+					fmt.Println("===================================================")
+				}
 				history = append(history, Message{
 					Role:       "tool",
 					ToolCallID: tc.ID,
@@ -161,6 +172,20 @@ var tools = []Tool{
 			"command": map[string]interface{}{"type": "string", "description": "Shell command to execute"},
 		},
 		"required": []string{"command"},
+	}),
+	makeTool("web_search", "Perform a web search using Brave Search API", map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"query": map[string]interface{}{"type": "string", "description": "Search query"},
+		},
+		"required": []string{"query"},
+	}),
+	makeTool("web_fetch", "Fetch the content of a web page and strip HTML", map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"url": map[string]interface{}{"type": "string", "description": "URL to fetch"},
+		},
+		"required": []string{"url"},
 	}),
 }
 
@@ -265,6 +290,83 @@ func executeTool(name, argsJSON, workDir string) string {
 			return string(out) + "\nError: " + err.Error()
 		}
 		return string(out)
+
+	case "web_search":
+		braveKey := os.Getenv("BRAVE_API_KEY")
+		if braveKey == "" {
+			return "Error: BRAVE_API_KEY environment variable not set"
+		}
+		query := getString("query")
+		searchURL := "https://api.search.brave.com/res/v1/web/search?q=" + url.QueryEscape(query)
+		req, err := http.NewRequest("GET", searchURL, nil)
+		if err != nil {
+			return "Error: " + err.Error()
+		}
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Accept-Encoding", "gzip")
+		req.Header.Set("X-Subscription-Token", braveKey)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return "Error: " + err.Error()
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			body, _ := io.ReadAll(resp.Body)
+			return fmt.Sprintf("Error: %d %s", resp.StatusCode, string(body))
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return "Error: " + err.Error()
+		}
+		var response map[string]interface{}
+		if json.Unmarshal(body, &response) != nil {
+			return string(body)
+		}
+		if web, ok := response["web"]; ok {
+			if webMap, ok := web.(map[string]interface{}); ok {
+				if results, ok := webMap["results"]; ok {
+					if resSlice, ok := results.([]interface{}); ok {
+						var output strings.Builder
+						for _, r := range resSlice {
+							if rMap, ok := r.(map[string]interface{}); ok {
+								title, _ := rMap["title"].(string)
+								url, _ := rMap["url"].(string)
+								desc, _ := rMap["description"].(string)
+								output.WriteString(fmt.Sprintf("Title: %s\nURL: %s\nDescription: %s\n\n", title, url, desc))
+							}
+						}
+						return output.String()
+					}
+				}
+			}
+		}
+		return string(body)
+
+	case "web_fetch":
+		fetchURL := getString("url")
+		req, err := http.NewRequest("GET", fetchURL, nil)
+		if err != nil {
+			return "Error: " + err.Error()
+		}
+		req.Header.Set("Accept-Encoding", "gzip")
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return "Error: " + err.Error()
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 200 {
+			return fmt.Sprintf("Error: %d", resp.StatusCode)
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return "Error: " + err.Error()
+		}
+		content := string(body)
+		content = regexp.MustCompile(`<style([\s\S]+?)</style>`).ReplaceAllString(content, "")
+		content = regexp.MustCompile(`<script([\s\S]+?)</script>`).ReplaceAllString(content, "")
+		content = regexp.MustCompile(`<[^>]*>`).ReplaceAllString(content, "")
+		content = regexp.MustCompile(`\s+`).ReplaceAllString(content, " ")
+		return strings.TrimSpace(content)
 	}
 	return "Unknown tool"
 }
