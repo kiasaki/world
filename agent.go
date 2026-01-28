@@ -303,7 +303,6 @@ func executeTool(name, argsJSON, workDir string) string {
 			return "Error: " + err.Error()
 		}
 		req.Header.Set("Accept", "application/json")
-		req.Header.Set("Accept-Encoding", "gzip")
 		req.Header.Set("X-Subscription-Token", braveKey)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
@@ -348,7 +347,6 @@ func executeTool(name, argsJSON, workDir string) string {
 		if err != nil {
 			return "Error: " + err.Error()
 		}
-		req.Header.Set("Accept-Encoding", "gzip")
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			return "Error: " + err.Error()

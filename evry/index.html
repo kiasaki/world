@@ -417,8 +417,8 @@ async function onUnlock(e) {
       dbIndex(d);
     }
     const sync = async () => {
-      const sel = document.createElement("style"); sel.innerText = `:root{--border:cornflowerblue;}`;
-      document.body.appendChild(sel);
+      //const sel = document.createElement("style"); sel.innerText = `:root{--border:cornflowerblue;}`;
+      //document.body.appendChild(sel);
       try {
         const checkpoint = parseInt(localStorage.checkpoint || "0");
         const up = state.datums.filter(d => !d[4]).map(d => d.slice(0, 4));
@@ -440,7 +440,7 @@ async function onUnlock(e) {
       } catch (e) {
         console.error("sync error", e);
       }
-      setTimeout(() => document.body.removeChild(sel), 500);
+      //setTimeout(() => document.body.removeChild(sel), 500);
     };
     sync();
     setInterval(sync, 15000);

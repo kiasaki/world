@@ -46,17 +46,18 @@ type Action struct {
 }
 
 func main() {
+	e := &Editor{}
+	e.Lines = []string{""}
 	termRaw()
 	defer func() {
 		termReset()
 		io.WriteString(os.Stdout, "\x1b[2J")
 		io.WriteString(os.Stdout, "\x1b[H")
 		if err := recover(); err != nil {
+			e.Save()
 			panic(err)
 		}
 	}()
-	e := &Editor{}
-	e.Lines = []string{""}
 	e.UpdateSize()
 	if len(os.Args) >= 2 {
 		e.Name = os.Args[1]
@@ -928,14 +929,22 @@ func die(err error) {
 }
 
 func clipboardRead() string {
-	cmd := exec.Command("xclip", "-out", "-selection", "clipboard")
+	args := []string{"xclip", "-out", "-selection", "clipboard"}
+	if runtime.GOOS == "darwin" {
+		args = []string{"pbpaste"}
+	}
+	cmd := exec.Command(args[0], args[1:]...)
 	bs, err := cmd.Output()
 	die(err)
 	return string(bs)
 }
 
 func clipboardWrite(s string) {
-	cmd := exec.Command("xclip", "-in", "-selection", "clipboard")
+	args := []string{"xclip", "-in", "-selection", "clipboard"}
+	if runtime.GOOS == "darwin" {
+		args = []string{"pbcopy"}
+	}
+	cmd := exec.Command(args[0], args[1:]...)
 	in, err := cmd.StdinPipe()
 	die(err)
 	die(cmd.Start())
