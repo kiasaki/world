@@ -24,7 +24,8 @@ rest doesn't really matter
 ## glossary
 
 - username: hash of username for user retrieval
-- key: api key, shared secret for access control
+- id: immutable id under which user state is stored
+- secret: api key, shared secret for access control
 - master: encrypted master key stored on user
 - datum: EAVT quadruplet representing database data
 - chunk: ~1mb array of datums stored together
@@ -33,7 +34,21 @@ rest doesn't really matter
 
 ## s3 storage paths
 
-- `n/<hashed-username>`: user key as string
-- `u/<key>`: user data (master, chunk, key (not returned))
+- `n/<hashed-username>`: user id as base64 string
+- `u/<key>`: user data (salt, master, chunk, secret (not returned))
 - `d/<key>/<chunk>`: chunk of datums
 - `b/<key>/<hashed-data>`: blob of data
+
+## crypto
+
+- `masterKey` = random(32)
+- `salt` = random(32)
+- `password` = pbkdf2(password_as_secret, salt_as_salt)
+- `secret` = pbkdf2(password_as_secret, username_as_salt)
+- `master` = aesgcm_encrypt(password, masterKey)
+- password is used just to decrypt master
+- master and secret can be updated when username or password changes
+- decrypted `master` (`state.masterKey` in app) never changes
+- each encryption result is a triplet of version(1) + base64(salt) + base64(encrypted_data)
+- pin is pbkdf2(pin_as_secret, username_as_salt) user to encrypt user's password
+- could probably move to secret being derived from user salt too and concatenate salt with fixed prefix and hash again

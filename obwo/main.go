@@ -45,7 +45,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 			log.Printf("panic: %s %s: %v", r.Method, r.URL.Path, err)
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(500)
-			w.Write(jsonEncode(J{"error": err}))
+			w.Write(jsonEncode(J{"error": fmt.Sprintf("%v", err)}))
 		}
 	}()
 	if r.Method == "POST" {
@@ -73,57 +73,66 @@ func rpc(w http.ResponseWriter, r *http.Request) {
 	code := 200
 	ret := J{}
 	b := jsonDecode(ioMustRead(r.Body))
-	key := js(b, "key")
-	switch js(b, "method") {
-	case "userGet":
+	if js(b, "method") == "userGet" {
 		username := js(b, "username")
-		key := string(s3Get("n/" + username))
-		ret = jsonDecode(s3Get("u/" + key))
-		delete(ret, "key")
-	case "userPut":
-		username := js(b, "username")
-		nkey := string(s3Get("n/" + username))
-		if nkey == "" {
-			s3Put("n/"+username, []byte(key))
+		id := string(s3Get("n/" + username))
+		ret = jsonDecode(s3Get("u/" + id))
+		delete(ret, "secret")
+	} else {
+		id := js(b, "id")
+		user := jsonDecode(s3Get("u/" + id))
+		if len(user) > 0 && js(user, "secret") != js(b, "secret") {
+			panic("unauthorized")
 		}
-		user := jsonDecode(s3Get("u/" + key))
-		user["master"] = js(b, "master")
-		user["key"] = key
-		s3Put("u/"+key, jsonEncode(user))
-	case "datumGet":
-		checkpoint := strings.Split(or(js(b, "checkpoint"), "0.0"), ".")
-		chunk, _ := strconv.Atoi(checkpoint[0])
-		index, _ := strconv.Atoi(checkpoint[1])
-		k := fmt.Sprintf("d/%s/%d", key, chunk)
-		datums := jsonDecode(s3Get(k))["datums"].([]interface{})
-		ret = J{"datums": datums[index:]}
-	case "datumPut":
-		user := jsonDecode(s3Get("u/" + key))
-		chunk := ji(user, "chunk")
-		k := fmt.Sprintf("d/%s/%d", key, chunk)
-		d := jsonDecode([]byte(or(string(s3Get(k)), `{"datums":[]}`)))
-		datums := d["datums"].([]interface{})
-		datums = append(datums, b["datums"].([]interface{})...)
-		data := jsonEncode(J{"datums": datums})
-		s3Put(k, data)
-		if len(data) >= 2^20 { // 1mb
-			chunk++
-			datums = []interface{}{}
-			user["chunk"] = chunk
-			s3Put("u/"+key, jsonEncode(user))
+		switch js(b, "method") {
+		case "userPut":
+			username := js(b, "username")
+			if len(s3Get("n/"+username)) == 0 {
+				s3Put("n/"+username, []byte(id))
+			}
+			user["id"] = id
+			user["salt"] = js(b, "salt")
+			user["secret"] = js(b, "secret")
+			user["master"] = js(b, "master")
+			s3Put("u/"+id, jsonEncode(user))
+		case "datumGet":
+			checkpoint := strings.Split(or(js(b, "checkpoint"), "0.0"), ".")
+			chunk, _ := strconv.ParseInt(checkpoint[0], 10, 64)
+			index, _ := strconv.ParseInt(checkpoint[1], 10, 64)
+			k := fmt.Sprintf("d/%s/%d", id, chunk)
+			datums := jsonDecode([]byte(or(string(s3Get(k)), `{"datums":[]}`)))["datums"].([]interface{})
+			c := fmt.Sprintf("%d.%d", chunk, len(datums))
+			if chunk < ji(user, "chunk") {
+				c = fmt.Sprintf("%d.0", chunk+1)
+			}
+			ret = J{"datums": datums[index:], "checkpoint": c}
+		case "datumPut":
+			user := jsonDecode(s3Get("u/" + id))
+			chunk := ji(user, "chunk")
+			k := fmt.Sprintf("d/%s/%d", id, chunk)
+			d := jsonDecode([]byte(or(string(s3Get(k)), `{"datums":[]}`)))
+			datums := d["datums"].([]interface{})
+			datums = append(datums, b["datums"].([]interface{})...)
+			data := jsonEncode(J{"datums": datums})
+			s3Put(k, data)
+			if len(data) >= 1_048_576 { // 1mb
+				chunk++
+				datums = []interface{}{}
+				user["chunk"] = chunk
+				s3Put("u/"+id, jsonEncode(user))
+			}
+		case "blobGet":
+			ret = J{"data": s3Get("b/" + id)}
+		case "blobPut":
+			data := []byte(js(b, "data"))
+			id := hashAndEncode(data)
+			if len(s3Get("b/"+id+"/"+id)) == 0 {
+				s3Put("b/"+id+"/"+id, data)
+			}
+		default:
+			code = 500
+			ret = J{"error": "unknown method"}
 		}
-		ret = J{"checkpoint": fmt.Sprintf("%d.%d", chunk, len(datums))}
-	case "blobGet":
-		ret = J{"data": s3Get("b/" + key)}
-	case "blobPut":
-		data := []byte(js(b, "data"))
-		id := hashAndEncode(data)
-		if len(s3Get("b/"+key+"/"+id)) == 0 {
-			s3Put("b/"+key+"/"+id, data)
-		}
-	default:
-		code = 500
-		ret = J{"error": "unknown method"}
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
@@ -179,6 +188,7 @@ func check(err error) {
 }
 
 func s3Get(key string) []byte {
+	key = strings.ReplaceAll(strings.ReplaceAll(key, "/", "_"), "+", "-")
 	lock.RLock()
 	defer lock.RUnlock()
 	if os.Getenv("AWS_ACCESS_KEY") == "" {
@@ -202,6 +212,7 @@ func s3Get(key string) []byte {
 }
 
 func s3Put(key string, value []byte) {
+	key = strings.ReplaceAll(strings.ReplaceAll(key, "/", "_"), "+", "-")
 	lock.Lock()
 	defer lock.Unlock()
 	if os.Getenv("AWS_ACCESS_KEY") == "" {
