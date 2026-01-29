@@ -2,7 +2,7 @@
 
 a personal cloud, minimal, encrypted, local-first, synced
 
-apps for: files, notes, passwords, tasks, contacts, calendars, mails
+apps for: files, notes, tasks, passwords, contacts, calendars, mails
 
 with extra apps deriving from files / web: pictures, music, news, search
 

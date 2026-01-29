@@ -14,9 +14,9 @@ body { font-family: var(--font); font-size: var(--size); line-height: 1.33; marg
 a { cursor: pointer; }
 .input { padding: 8px; min-width: 200px; border: none; background: transparent; color: var(--foreground); line-height: 1.333; font-size: var(--size); font-family: var(--font); outline: 0; border-radius: 0; }
 .button { color: var(--background); background: var(--foreground); font-family: var(--font); padding: 8px; border: 0; font-size: var(--size); cursor: pointer; text-align: left; }
-.container { max-width: 800px; border: 1px solid var(--border); border-width: 0 1px 0 1px; min-height: 100vh; }
+.container { max-width: 800px; margin: 0 auto; }
 .result:hover { background: var(--foreground); color: var(--background); cursor: pointer; }
-.icon { width: 20px; height: 20px; vertical-align:middle; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon { width: 24px; height: 24px; vertical-align:middle; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .block { display: block; }
 .flex { display: flex; }
@@ -30,9 +30,17 @@ a { cursor: pointer; }
 .border-r, .border-t, .border-b { border: 0 solid var(--border); }
 .border-t { border-top-width: 1px; }
 .border-b { border-bottom-width: 1px; }
+.auth { background: white; max-width: 340px; margin: 10vh auto; padding: 32px; }
+.page { display: flex; min-height: 100vh; }
+.apps { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; border-right: 1px solid var(--border); padding: 8px; gap: 8px; }
+.apps a { display: inline-block; color: var(--foreground); gap: 16px; padding: 4px; }
+.apps a:hover { background: var(--border); }
+.sidebar { min-height: 100vh; display: flex; flex-direction: column; gap: 16px; padding: 16px; border-right: 1px solid var(--border); width: 260px; }
+.content { flex: 1;  padding: 16px; }
+.title { font-size: 28px; margin: 0; }
 </style>
 <div id="root">
-  <form class="container" style="max-width:300px" onsubmit="javascript:onUnlock(event)">
+  <form class="auth" onsubmit="javascript:onUnlock(event)">
     <h1 style="margin:0;padding:8px 8px 0">obwo</h1>
     <div class="error p-2" id="error"></div>
     <input class="input border-t w-full" id="usernameField" placeholder="username" /><br />
@@ -255,52 +263,31 @@ const redraw = () => {
     root.innerHTML = `<div class="error" style="padding:20vh 0;text-align:center">${e.message}</div>`;
   }
 };
+const iconFiles = `<svg viewBox="0 0 24 24" class="icon"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+const iconNotes = `<svg viewBox="0 0 24 24" class="icon"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>`;
+const iconTasks = `<svg viewBox="0 0 24 24" class="icon"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>`;
+const iconSecrets = `<svg viewBox="0 0 24 24" class="icon"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>`;
+const iconContacts = `<svg viewBox="0 0 24 24" class="icon"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`;
+const iconCalendars = `<svg viewBox="0 0 24 24" class="icon"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+const iconMails = `<svg viewBox="0 0 24 24" class="icon"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`;
+const iconNews = `<svg viewBox="0 0 24 24" class="icon"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`;
+const iconSearch = `<svg viewBox="0 0 24 24" class="icon"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
+const iconPlus = `<svg viewBox="0 0 24 24" class="icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
 const RESERVED = ["id", "rev", "title", "content", "deleted"];
 function App() {
-  const [id, setId] = useState(window.location.hash.slice(1));
+  const hashParts = window.location.hash.slice(1).split("/");
+  const [page, setPage] = useState(hashParts[0] || "search");
+  const [id, setId] = useState(hashParts[1]);
   const [search, setSearch] = useState("");
-  const [searchFocused, setSearchFocused] = useState(false);
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [newAttribute, setNewAttribute] = useState("");
-  const [attributeInputs, setAttributeInputs] = useState({});
   const entity = state.entities[id];
-  const attributes = Object.keys(entity || {}).filter(k => !RESERVED.includes(k) && (entity||{})[k] != null).sort();
   const results = Object.values(state.entities).filter(e => !e.deleted)
+    .filter(e => e.kind === page)
     .filter(e => (e.title||"").toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => a.rev > b.rev ? -1 : 1);
-  useEffect(() => {
-    if (!id) document.getElementById("search").focus();
-  }, []);
-  useEffect(() => {
-    if (!entity) return;
-    setTitle(entity.title || "");
-    setContent(entity.content || "");
-    setNewAttribute("");
-    setAttributeInputs(attributes.reduce((t, a) => Object.assign(t, {["a"+a]: a, ["v"+a]: entity[a]}), {}));
-  }, [entity]);
-  function onSearchKeyDown(e) {
-    if (e.keyCode != 13) return;
-    if (results.length == 0) return onNew();
-    setEntity(results[0].id);
-  }
-  async function onNew() {
-    const id = newId(); await dbChange(id, {title: search}); setEntity(id);
-    setTimeout(() => document.querySelector("textarea").focus(), 100);
-  }
-  async function onNewAttribute() {
-    const a = newAttribute;
-    if (!a || RESERVED.includes(a)) return;
-    await dbChange(id, {[a]: ""});
-    setAttributeInputs({...attributeInputs, ["a"+a]: a, ["v"+a]: ""});
-    setNewAttribute("");
-  }
-  async function onUpdateAttribute(prev, next) {
-    if (RESERVED.includes(next)) return;
-    if (next == "") { dbChange(id, {[prev]: null}); return; }
-    if (prev == next) return;
-    setAttributeInputs({...attributeInputs, ["a"+next]: next, ["v"+next]: entity[prev]});
-    await dbChange(id, {[prev]: null, [next]: entity[prev]});
+  async function onNew(kind, title) {
+    const id = newId(); await dbChange(id, {kind, title}); setId(id);
+    //setTimeout(() => document.querySelector("textarea").focus(), 100);
   }
   function onChange(attribute, value) {
     if (entity[attribute] == value) return;
@@ -311,91 +298,87 @@ function App() {
     dbChange(id, {deleted: Date.now()});
     setId("");
   }
-  function setEntity(id) {
+  function route(e, page, id) {
+    e.preventDefault();
+    setPage(page);
     setId(id);
-    window.location.hash = id;
-    document.querySelector("#search").blur();
+    window.location.hash = page + (id ? "/"+id : "");
   }
-  function renderSearch() {
-    return h("div", {}, results.map(e =>
-      h("div", {k: "result p-2 border-b truncate", key: e.id, onmousedown: () => setEntity(e.id)},
-        e.title, h("span", {k: "faded ml-2"}, (e.content||"").slice(0, 50)))));
-  }
-  function renderEntity() {
-    return h("div", {k: "flex", style:"flex-direction:column;"}, [
-      h("input", {
-        k: "input flex-1 border-b",
-        style: "font-size:22px;",
-        placeholder: "title",
-        tabindex: 2,
-        value: title,
-        oninput: e => setTitle(e.target.value),
-        onchange: e => onChange("title", e.target.value),
-      }),
-      ...attributes.map((a, i) => h("div", {k: "flex border-b", key: a}, [
-        h("input", {
-          k: "input flex-1 border-r",
-          placeholder: "attribute",
-          value: attributeInputs["a"+a]||"",
-          oninput: e => setAttributeInputs({...attributeInputs, ["a"+a]: e.target.value}),
-          onchange: e => onUpdateAttribute(a, e.target.value),
-        }),
-        h("input", {
-          k: "input flex-1",
-          placeholder: "value",
-          value: attributeInputs["v"+a]||"",
-          oninput: e => setAttributeInputs({...attributeInputs, ["v"+a]: e.target.value}),
-          onchange: e => onChange(a, e.target.value),
-        }),
-      ])),
-      h("input", {
-        k: "input border-b",
-        placeholder: "new attribute",
-        value: newAttribute,
-        oninput: e => setNewAttribute(e.target.value),
-        onchange: onNewAttribute,
-      }),
-      h("textarea", {
-        k: "input border-b",
-        style: "min-height:calc(100vh - "+(((attributes.length+1)*39)+151)+"px);resize:none;",
-        placeholder: "content",
-        tabindex: 3,
-        spellcheck: "false",
-        value: content,
-        oninput: e => setContent(e.target.value),
-        onchange: e => onChange("content", e.target.value),
-      }),
-      entity ? h("div", { k: "flex border-b", style: "padding:4px 8px;font-size:14px;" }, [
-        h("div", {}, formatDate(idDate(entity.id))),
-        h("div", {k: "flex-1"}),
-        h("div", {}, formatDate(idDate(entity.rev))),
-      ]) : null,
-      h("div", { k: "flex border-b", style: "padding:4px 8px;font-size:14px;" }, [
-        h("div", {}, localStorage.checkpoint || "0.0"),
-        h("div", {k: "flex-1"}),
-        h("a", {onclick: onDelete}, "delete"),
-        h("div", {k: "flex-1"}),
-        h("div", {}, localStorage.username || ""),
-      ]),
-    ]);
-  }
-  return h("div", {k: "container"}, [
-    h("div", {k: "flex border-b"}, [
-      h("button", {k: "button", onclick: () => {setSearch("");setEntity("")}, innerHTML: `<svg viewBox="0 0 24 24" class="icon"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>`}),
-      h("input", {
-        id: "search",
-        k: "input flex-1",
-        placeholder: "search...",
-        tabindex: 1,
-        value: search,
-        oninput: e => setSearch(e.target.value),
-        onkeydown: onSearchKeyDown,
-        onfocus: () => setSearchFocused(true),
-        onblur: () => setSearchFocused(false)
-      }),
-      h("button", {k: "button", onclick: onNew, innerHTML: `<svg viewBox="0 0 24 24" class="icon"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`}),
+  return h("div", {k: "page"}, [
+    h("div", {k: "apps"}, [
+      h("a", {href: "#files", onclick: (e) => route(e, "files"), innerHTML: iconFiles}),
+      h("a", {href: "#notes", onclick: (e) => route(e, "notes"), innerHTML: iconNotes}),
+      h("a", {href: "#tasks", onclick: (e) => route(e, "tasks"), innerHTML: iconTasks}),
+      h("a", {href: "#secrets", onclick: (e) => route(e, "secrets"), innerHTML: iconSecrets}),
+      h("a", {href: "#contacts", onclick: (e) => route(e, "contacts"), innerHTML: iconContacts}),
+      h("a", {href: "#calendars", onclick: (e) => route(e, "calendars"), innerHTML: iconCalendars}),
+      h("a", {href: "#mails", onclick: (e) => route(e, "mails"), innerHTML: iconMails}),
+      h("a", {href: "#news", onclick: (e) => route(e, "news"), innerHTML: iconNews}),
+      h("a", {href: "#search", onclick: (e) => route(e, "search"), innerHTML: iconSearch}),
     ]),
-    id && !searchFocused ? renderEntity() : renderSearch()
+    page == "files" ? h(PageFiles, {}) : null,
+    page == "notes" ? h(PageNotes, {}) : null,
+    page == "tasks" ? h(PageTasks, {}) : null,
+    page == "secrets" ? h(PageSecrets, {}) : null,
+    page == "contacts" ? h(PageContacts, {}) : null,
+    page == "calendars" ? h(PageCalendars, {}) : null,
+    page == "mails" ? h(PageMails, {}) : null,
+    page == "news" ? h(PageNews, {}) : null,
+    page == "search" ? h(PageSearch, {}) : null,
+  ]);
+}
+function PageFiles() {
+  return h("page", {}, [
+    h("div", {k: "sidebar"}, [h("h1", {k: "title"}, "files")]),
+    h("div", {k: "content"}, h("div", {k:"container"}, []))
+  ]);
+}
+function PageNotes() {
+  return h("page", {}, [
+    h("div", {k: "sidebar"}, [h("h1", {k: "title"}, "notes")]),
+    h("div", {k: "content"}, h("div", {k:"container"}, []))
+  ]);
+}
+function PageTasks() {
+  return h("page", {}, [
+    h("div", {k: "sidebar"}, [h("h1", {k: "title"}, "tasks")]),
+    h("div", {k: "content"}, h("div", {k:"container"}, []))
+  ]);
+}
+function PageSecrets() {
+  return h("page", {}, [
+    h("div", {k: "sidebar"}, [h("h1", {k: "title"}, "secrets")]),
+    h("div", {k: "content"}, h("div", {k:"container"}, []))
+  ]);
+}
+function PageContacts() {
+  return h("page", {}, [
+    h("div", {k: "sidebar"}, [h("h1", {k: "title"}, "contacts")]),
+    h("div", {k: "content"}, h("div", {k:"container"}, []))
+  ]);
+}
+function PageCalendars() {
+  return h("page", {}, [
+    h("div", {k: "sidebar"}, [h("h1", {k: "title"}, "calendars")]),
+    h("div", {k: "content"}, h("div", {k:"container"}, []))
+  ]);
+}
+function PageMails() {
+  return h("page", {}, [
+    h("div", {k: "sidebar"}, [h("h1", {k: "title"}, "mails")]),
+    h("div", {k: "content"}, h("div", {k:"container"}, []))
+  ]);
+}
+function PageNews() {
+  return h("page", {}, [
+    h("div", {k: "sidebar"}, [h("h1", {k: "title"}, "news")]),
+    h("div", {k: "content"}, h("div", {k:"container"}, []))
+  ]);
+}
+function PageSearch() {
+  return h("page", {}, [
+    h("div", {k: "sidebar"}, [h("h1", {k: "title"}, "search")]),
+    h("div", {k: "content"}, h("div", {k:"container"}, "asd asd asd asd asd asd asd asd asd asd asd asd asd asd asd asd asd asd asd asd asd asd"))
   ]);
 }
 async function onUnlock(e) {

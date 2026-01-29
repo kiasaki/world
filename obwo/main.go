@@ -75,31 +75,31 @@ func rpc(w http.ResponseWriter, r *http.Request) {
 	b := jsonDecode(ioMustRead(r.Body))
 	if js(b, "method") == "userGet" {
 		username := js(b, "username")
-		id := string(s3Get("n/" + username))
-		ret = jsonDecode(s3Get("u/" + id))
+		id := string(s3Get("n|" + username))
+		ret = jsonDecode(s3Get("u|" + id))
 		delete(ret, "secret")
 	} else {
 		id := js(b, "id")
-		user := jsonDecode(s3Get("u/" + id))
+		user := jsonDecode(s3Get("u|" + id))
 		if len(user) > 0 && js(user, "secret") != js(b, "secret") {
 			panic("unauthorized")
 		}
 		switch js(b, "method") {
 		case "userPut":
 			username := js(b, "username")
-			if len(s3Get("n/"+username)) == 0 {
-				s3Put("n/"+username, []byte(id))
+			if len(s3Get("n|"+username)) == 0 {
+				s3Put("n|"+username, []byte(id))
 			}
 			user["id"] = id
 			user["salt"] = js(b, "salt")
 			user["secret"] = js(b, "secret")
 			user["master"] = js(b, "master")
-			s3Put("u/"+id, jsonEncode(user))
+			s3Put("u|"+id, jsonEncode(user))
 		case "datumGet":
 			checkpoint := strings.Split(or(js(b, "checkpoint"), "0.0"), ".")
 			chunk, _ := strconv.ParseInt(checkpoint[0], 10, 64)
 			index, _ := strconv.ParseInt(checkpoint[1], 10, 64)
-			k := fmt.Sprintf("d/%s/%d", id, chunk)
+			k := fmt.Sprintf("d|%s|%d", id, chunk)
 			datums := jsonDecode([]byte(or(string(s3Get(k)), `{"datums":[]}`)))["datums"].([]interface{})
 			c := fmt.Sprintf("%d.%d", chunk, len(datums))
 			if chunk < ji(user, "chunk") {
@@ -107,9 +107,9 @@ func rpc(w http.ResponseWriter, r *http.Request) {
 			}
 			ret = J{"datums": datums[index:], "checkpoint": c}
 		case "datumPut":
-			user := jsonDecode(s3Get("u/" + id))
+			user := jsonDecode(s3Get("u|" + id))
 			chunk := ji(user, "chunk")
-			k := fmt.Sprintf("d/%s/%d", id, chunk)
+			k := fmt.Sprintf("d|%s|%d", id, chunk)
 			d := jsonDecode([]byte(or(string(s3Get(k)), `{"datums":[]}`)))
 			datums := d["datums"].([]interface{})
 			datums = append(datums, b["datums"].([]interface{})...)
@@ -119,15 +119,15 @@ func rpc(w http.ResponseWriter, r *http.Request) {
 				chunk++
 				datums = []interface{}{}
 				user["chunk"] = chunk
-				s3Put("u/"+id, jsonEncode(user))
+				s3Put("u|"+id, jsonEncode(user))
 			}
 		case "blobGet":
-			ret = J{"data": s3Get("b/" + id)}
+			ret = J{"data": s3Get("b|" + id + "|" + js(b, "blob"))}
 		case "blobPut":
 			data := []byte(js(b, "data"))
-			id := hashAndEncode(data)
-			if len(s3Get("b/"+id+"/"+id)) == 0 {
-				s3Put("b/"+id+"/"+id, data)
+			bid := "b|" + id + "|" + hashAndEncode(data)
+			if len(s3Get(bid)) == 0 {
+				s3Put(bid, data)
 			}
 		default:
 			code = 500
@@ -188,7 +188,7 @@ func check(err error) {
 }
 
 func s3Get(key string) []byte {
-	key = strings.ReplaceAll(strings.ReplaceAll(key, "/", "_"), "+", "-")
+	key = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(key, "/", "_"), "+", "-"), "|", "/")
 	lock.RLock()
 	defer lock.RUnlock()
 	if os.Getenv("AWS_ACCESS_KEY") == "" {
@@ -212,7 +212,7 @@ func s3Get(key string) []byte {
 }
 
 func s3Put(key string, value []byte) {
-	key = strings.ReplaceAll(strings.ReplaceAll(key, "/", "_"), "+", "-")
+	key = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(key, "/", "_"), "+", "-"), "|", "/")
 	lock.Lock()
 	defer lock.Unlock()
 	if os.Getenv("AWS_ACCESS_KEY") == "" {
