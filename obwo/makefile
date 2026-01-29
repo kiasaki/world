@@ -1,0 +1,15 @@
+dev:
+	@which reflex>/dev/null || go install github.com/cespare/reflex@latest
+	reflex -s -d none -r '.(go|js|css|html)$$' -- make run
+
+run:
+	go run main.go
+
+APP=obwo
+REMOTE=homelab
+
+build:
+	GOOS=linux GOARCH=amd64 go build -v -ldflags "-s -w" -installsuffix cgo -o /tmp/$(APP) main.go
+
+deploy: build
+	scp /tmp/$(APP) $(REMOTE):/tmp/aout && ssh $(REMOTE) "sudo mv /tmp/aout /usr/bin/$(APP)" && ssh $(REMOTE) "sudo systemctl restart $(APP)"
