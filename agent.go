@@ -27,8 +27,25 @@ func main() {
 	if bs, err := os.ReadFile("AGENTS.md"); err == nil {
 		projectContext = "The following project context files have been loaded:\n\n## AGENTS.md\n\n" + string(bs) + "\n"
 	}
-	systemPrompt := fmt.Sprintf("You are a helpful coding assistant. Use tools when needed to help the user.\n\nAvailable tools:\n- read\n- bash\n- edit\n- write\n- web_search\n- web_fetch\n\nGuidelines:\n\n- Use read to examine files before editing. You must use this tool instead of cat or sed.\n- Use edit for precise changes (old text must match exactly).\n- Use write only for new files or complete rewrites\n- When summarizing your actions, output plain text directly - do NOT use cat or bash to display what you did.\n- Be concise in your responses.\n- Show file paths clearly when working with files.\n\n%s\nCurrent date and time: %s\nCurrent working directory: %s", projectContext, time.Now().Format("2006-01-02 15:04"), workDir)
+	systemPrompt := fmt.Sprintf("You are an expert coding assistant. You help users with coding tasks by reading files, executing commands, editing code, and writing new files.\n\nAvailable tools:\n- read: Read file contents\n- bash: Execute bash commands\n- edit: Make surgical edits to files\n- write: Create or overwrite files\n- web_search: search for websites\n- web_fetch: fetch a web page\n\nGuidelines:\n\n- Use bash for file operations like ls, rg, find\n- Use read to examine files before editing. You must use this tool instead of cat or sed\n- Use edit for precise changes (old text must match exactly)\n- Use write only for new files or complete rewrites\n- When summarizing your actions, output plain text directly - do NOT use cat or bash to display what you did\n- Be concise in your responses\n- Show file paths clearly when working with files\n\n%s\nCurrent date and time: %s\nCurrent working directory: %s", projectContext, time.Now().Format("2006-01-02 15:04"), workDir)
 	history = append(history, Message{Role: "system", Content: systemPrompt})
+
+	exitAfterFirstTurn := false
+	for _, a := range os.Args[1:] {
+		if a == "-p" {
+			exitAfterFirstTurn = true
+		} else {
+			history = append(history, Message{Role: "user", Content: a})
+		}
+	}
+	if exitAfterFirstTurn {
+		history = complete(history, workDir, noopOutput)
+		fmt.Println(history[len(history)-1].Content)
+		return
+	}
+	if len(history) > 1 {
+		history = complete(history, workDir, stdOutput)
+	}
 
 	for {
 		fmt.Print("\n> ")
@@ -40,59 +57,65 @@ func main() {
 			continue
 		}
 		history = append(history, Message{Role: "user", Content: input})
+		history = complete(history, workDir, stdOutput)
+	}
+}
 
-		for {
-			content, toolCalls, err := callAPI(history)
-			if err != nil {
-				fmt.Println("Error:", err)
-				break
-			}
-			if len(toolCalls) == 0 {
-				if content != "" {
-					history = append(history, Message{Role: "assistant", Content: content})
-				}
-				break
-			}
+func stdOutput(f string, v ...any) {
+	fmt.Printf(f, v...)
+}
 
-			assistantMsg := Message{Role: "assistant", ToolCalls: toolCalls}
+func noopOutput(f string, v ...any) {
+}
+
+func complete(history []Message, workDir string, output func(string, ...any)) []Message {
+	for {
+		content, toolCalls, err := callAPI(history, output)
+		if err != nil {
+			output("Error: %v", err)
+			break
+		}
+		if len(toolCalls) == 0 {
 			if content != "" {
-				assistantMsg.Content = content
+				history = append(history, Message{Role: "assistant", Content: content})
 			}
-			history = append(history, assistantMsg)
+			break
+		}
 
-			for _, tc := range toolCalls {
-				args := map[string]interface{}{}
-				json.Unmarshal([]byte(tc.Function.Arguments), &args)
-				if tc.Function.Name == "read" {
-					fmt.Printf("\nREAD %v\n", args["path"])
-				} else if tc.Function.Name == "edit" {
-					fmt.Printf("\nEDIT %v (%d)\n", args["path"], len(args["new_text"].(string)))
-				} else if tc.Function.Name == "write" {
-					fmt.Printf("\nWRITE %v (%d)\n", args["path"], len(args["content"].(string)))
-				} else if tc.Function.Name == "bash" {
-					fmt.Printf("\nBASH %v\n", args["command"])
-				} else if tc.Function.Name == "web_search" {
-					fmt.Printf("\nWEB SEARCH %v\n", args["query"])
-				} else if tc.Function.Name == "web_fetch" {
-					fmt.Printf("\nWEB FETCH %v\n", args["url"])
-				} else {
-					fmt.Printf("\n%s: %s\n", strings.ToUpper(tc.Function.Name), tc.Function.Arguments)
-				}
-				result := executeTool(tc.Function.Name, tc.Function.Arguments, workDir)
-				//fmt.Printf("[Result: %s]\n\n", truncate(result, 200))
-				if tc.Function.Name == "web_fetch" {
-					fmt.Println("===================================================")
-					fmt.Println(result)
-					fmt.Println("===================================================")
-				}
-				history = append(history, Message{
-					Role:       "tool",
-					ToolCallID: tc.ID,
-					Content:    result,
-				})
+		assistantMsg := Message{Role: "assistant", ToolCalls: toolCalls}
+		if content != "" {
+			assistantMsg.Content = content
+		}
+		history = append(history, assistantMsg)
+
+		for _, tc := range toolCalls {
+			args := map[string]interface{}{}
+			json.Unmarshal([]byte(tc.Function.Arguments), &args)
+			if tc.Function.Name == "read" {
+				output("\nREAD %v\n", args["path"])
+			} else if tc.Function.Name == "edit" {
+				output("\nEDIT %v (%d)\n", args["path"], len(args["new_text"].(string)))
+			} else if tc.Function.Name == "write" {
+				output("\nWRITE %v (%d)\n", args["path"], len(args["content"].(string)))
+			} else if tc.Function.Name == "bash" {
+				output("\nBASH %v\n", args["command"])
+			} else if tc.Function.Name == "web_search" {
+				output("\nWEB SEARCH %v\n", args["query"])
+			} else if tc.Function.Name == "web_fetch" {
+				output("\nWEB FETCH %v\n", args["url"])
+			} else {
+				output("\n%s: %s\n", strings.ToUpper(tc.Function.Name), tc.Function.Arguments)
 			}
+			result := executeTool(tc.Function.Name, tc.Function.Arguments, workDir)
+			history = append(history, Message{
+				Role:       "tool",
+				ToolCallID: tc.ID,
+				Content:    result,
+			})
 		}
 	}
+
+	return history
 }
 
 type Message struct {
@@ -140,36 +163,36 @@ type StreamResponse struct {
 }
 
 var tools = []Tool{
-	makeTool("read", "Read contents of a file", map[string]interface{}{
+	makeTool("read", "Read file contents. Use offset/limit for large files.", map[string]interface{}{
 		"type": "object",
 		"properties": map[string]interface{}{
-			"path":   map[string]interface{}{"type": "string", "description": "File path"},
-			"offset": map[string]interface{}{"type": "integer", "description": "Line number to start reading from (1-indexed, optional)"},
-			"limit":  map[string]interface{}{"type": "integer", "description": "Maximum number of lines to read (optional)"},
+			"path":   map[string]interface{}{"type": "string", "description": "Path to the file to read (relative or absolute)"},
+			"offset": map[string]interface{}{"type": "integer", "description": "Line number to start reading from (1-indexed)"},
+			"limit":  map[string]interface{}{"type": "integer", "description": "Maximum number of lines to read"},
 		},
 		"required": []string{"path"},
 	}),
-	makeTool("edit", "Edit a file by replacing exact text with new text", map[string]interface{}{
+	makeTool("write", "Write content to a file. Creates the file if it doesn't exist, overwrites if it does. Automatically creates parent directories.", map[string]interface{}{
 		"type": "object",
 		"properties": map[string]interface{}{
-			"path":     map[string]interface{}{"type": "string", "description": "File path"},
-			"old_text": map[string]interface{}{"type": "string", "description": "Exact text to find and replace"},
-			"new_text": map[string]interface{}{"type": "string", "description": "Replacement text"},
-		},
-		"required": []string{"path", "old_text", "new_text"},
-	}),
-	makeTool("write", "Write contents to a file", map[string]interface{}{
-		"type": "object",
-		"properties": map[string]interface{}{
-			"path":    map[string]interface{}{"type": "string", "description": "File path"},
-			"content": map[string]interface{}{"type": "string", "description": "Content to write"},
+			"path":    map[string]interface{}{"type": "string", "description": "Path to the file to write (relative or absolute)"},
+			"content": map[string]interface{}{"type": "string", "description": "Content to write to the file"},
 		},
 		"required": []string{"path", "content"},
 	}),
-	makeTool("bash", "Execute a shell command", map[string]interface{}{
+	makeTool("edit", "Make surgical edits to files (find exact text and replace)", map[string]interface{}{
 		"type": "object",
 		"properties": map[string]interface{}{
-			"command": map[string]interface{}{"type": "string", "description": "Shell command to execute"},
+			"path":     map[string]interface{}{"type": "string", "description": "Path to the file to edit (relative or absolute)"},
+			"old_text": map[string]interface{}{"type": "string", "description": "Exact text to find and replace (must match exactly)"},
+			"new_text": map[string]interface{}{"type": "string", "description": "New text to replace the old text with"},
+		},
+		"required": []string{"path", "old_text", "new_text"},
+	}),
+	makeTool("bash", "Execute bash commands (ls, grep, find, etc.)", map[string]interface{}{
+		"type": "object",
+		"properties": map[string]interface{}{
+			"command": map[string]interface{}{"type": "string", "description": "Execute a bash command in the current working directory. Returns stdout and stderr"},
 		},
 		"required": []string{"command"},
 	}),
@@ -369,7 +392,7 @@ func executeTool(name, argsJSON, workDir string) string {
 	return "Unknown tool"
 }
 
-func callAPI(messages []Message) (string, []ToolCall, error) {
+func callAPI(messages []Message, output func(string, ...any)) (string, []ToolCall, error) {
 	apiKey := os.Getenv("XAI_API_KEY")
 	if apiKey == "" {
 		return "", nil, fmt.Errorf("XAI_API_KEY environment variable not set")
@@ -419,7 +442,7 @@ func callAPI(messages []Message) (string, []ToolCall, error) {
 
 		delta := sr.Choices[0].Delta
 		if delta.Content != "" {
-			fmt.Print(delta.Content)
+			output("%s", delta.Content)
 			content.WriteString(delta.Content)
 		}
 
@@ -442,7 +465,7 @@ func callAPI(messages []Message) (string, []ToolCall, error) {
 	}
 
 	if content.Len() > 0 {
-		fmt.Println()
+		output("\n")
 	}
 	return content.String(), toolCalls, nil
 }
