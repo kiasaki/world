@@ -1,5 +1,12 @@
 package main
 
+// env vars
+// export OPENROUTER_API_KEY="sk-or-v1-..."
+// export KAGENT_MODEL="qwen/qwen3-coder-next"
+// export KAGENT_MODEL="moonshotai/kimi-k2.5"
+// export KAGENT_MODEL="openai/gpt-5.2-codex"
+// export KAGENT_MODEL="anthropic/claude-opus-4.6"
+
 import (
 	"bufio"
 	"bytes"
@@ -393,15 +400,15 @@ func executeTool(name, argsJSON, workDir string) string {
 }
 
 func callAPI(messages []Message, output func(string, ...any)) (string, []ToolCall, error) {
-	apiKey := os.Getenv("XAI_API_KEY")
+	apiKey := os.Getenv("OPENROUTER_API_KEY")
 	if apiKey == "" {
-		return "", nil, fmt.Errorf("XAI_API_KEY environment variable not set")
+		return "", nil, fmt.Errorf("OPENROUTER_API_KEY environment variable not set")
 	}
 
-	reqBody := Request{Model: "grok-code-fast-1", Messages: messages, Tools: tools, Stream: true}
+	reqBody := Request{Model: or(os.Getenv("KAGENT_MODEL"), "anthropic/claude-opus-4.6"), Messages: messages, Tools: tools, Stream: true}
 	jsonBody, _ := json.Marshal(reqBody)
 
-	req, _ := http.NewRequest("POST", "https://api.x.ai/v1/chat/completions", bytes.NewBuffer(jsonBody))
+	req, _ := http.NewRequest("POST", "https://openrouter.ai/api/v1/chat/completions", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 
@@ -475,4 +482,11 @@ func truncate(s string, n int) string {
 		return s
 	}
 	return s[:n] + "..."
+}
+
+func or(a, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
 }
