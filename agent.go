@@ -24,7 +24,6 @@ import (
 
 func main() {
 	history := []Message{}
-	scanner := bufio.NewScanner(os.Stdin)
 
 	workDir, err := os.Getwd()
 	if err != nil {
@@ -54,6 +53,18 @@ func main() {
 		history = complete(history, workDir, stdOutput)
 	}
 
+	run(history, workDir)
+}
+
+func run(history []Message, workDir string) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("ERROR: ", err)
+			run(history, workDir)
+		}
+	}()
+
+	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		fmt.Print("\n> ")
 		if !scanner.Scan() {
@@ -78,6 +89,9 @@ func noopOutput(f string, v ...any) {
 func complete(history []Message, workDir string, output func(string, ...any)) []Message {
 	for {
 		content, toolCalls, err := callAPI(history, output)
+		if os.Getenv("DEBUG") == "1" {
+			fmt.Printf("%#v %#v\n", content, toolCalls)
+		}
 		if err != nil {
 			output("Error: %v", err)
 			break
@@ -99,19 +113,19 @@ func complete(history []Message, workDir string, output func(string, ...any)) []
 			args := map[string]interface{}{}
 			json.Unmarshal([]byte(tc.Function.Arguments), &args)
 			if tc.Function.Name == "read" {
-				output("\nREAD %v\n", args["path"])
+				output("READ %v\n", args["path"])
 			} else if tc.Function.Name == "edit" {
-				output("\nEDIT %v (%d)\n", args["path"], len(args["new_text"].(string)))
+				output("EDIT %v (%d)\n", args["path"], len(args["new_text"].(string)))
 			} else if tc.Function.Name == "write" {
-				output("\nWRITE %v (%d)\n", args["path"], len(args["content"].(string)))
+				output("WRITE %v (%d)\n", args["path"], len(args["content"].(string)))
 			} else if tc.Function.Name == "bash" {
-				output("\nBASH %v\n", args["command"])
+				output("BASH %v\n", args["command"])
 			} else if tc.Function.Name == "web_search" {
-				output("\nWEB SEARCH %v\n", args["query"])
+				output("WEB SEARCH %v\n", args["query"])
 			} else if tc.Function.Name == "web_fetch" {
-				output("\nWEB FETCH %v\n", args["url"])
+				output("WEB FETCH %v\n", args["url"])
 			} else {
-				output("\n%s: %s\n", strings.ToUpper(tc.Function.Name), tc.Function.Arguments)
+				output("%s: %s\n", strings.ToUpper(tc.Function.Name), tc.Function.Arguments)
 			}
 			result := executeTool(tc.Function.Name, tc.Function.Arguments, workDir)
 			history = append(history, Message{
@@ -151,10 +165,15 @@ type Tool struct {
 }
 
 type Request struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	Tools    []Tool    `json:"tools"`
-	Stream   bool      `json:"stream"`
+	Model     string          `json:"model"`
+	Messages  []Message       `json:"messages"`
+	Tools     []Tool          `json:"tools"`
+	Stream    bool            `json:"stream"`
+	Reasoning RequestResoning `json:"reasoning"`
+}
+
+type RequestResoning struct {
+	Effort string `json:"effort"`
 }
 
 type StreamChoice struct {
@@ -405,7 +424,7 @@ func callAPI(messages []Message, output func(string, ...any)) (string, []ToolCal
 		return "", nil, fmt.Errorf("OPENROUTER_API_KEY environment variable not set")
 	}
 
-	reqBody := Request{Model: or(os.Getenv("KAGENT_MODEL"), "anthropic/claude-opus-4.6"), Messages: messages, Tools: tools, Stream: true}
+	reqBody := Request{Model: or(os.Getenv("KAGENT_MODEL"), "anthropic/claude-opus-4.6"), Messages: messages, Tools: tools, Stream: true, Reasoning: RequestResoning{Effort: "high"}}
 	jsonBody, _ := json.Marshal(reqBody)
 
 	req, _ := http.NewRequest("POST", "https://openrouter.ai/api/v1/chat/completions", bytes.NewBuffer(jsonBody))
