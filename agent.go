@@ -5,11 +5,13 @@ package main
 // export KAGENT_MODEL="qwen/qwen3-coder-next"
 // export KAGENT_MODEL="moonshotai/kimi-k2.5"
 // export KAGENT_MODEL="openai/gpt-5.2-codex"
+// export KAGENT_MODEL="x-ai/grok-code-fast-1"
 // export KAGENT_MODEL="anthropic/claude-opus-4.6"
 
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,7 +19,9 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -93,7 +97,7 @@ func complete(history []Message, workDir string, output func(string, ...any)) []
 			fmt.Printf("%#v %#v\n", content, toolCalls)
 		}
 		if err != nil {
-			output("Error: %v", err)
+			output("ERROR %v", err)
 			break
 		}
 		if len(toolCalls) == 0 {
@@ -113,11 +117,12 @@ func complete(history []Message, workDir string, output func(string, ...any)) []
 			args := map[string]interface{}{}
 			json.Unmarshal([]byte(tc.Function.Arguments), &args)
 			if tc.Function.Name == "read" {
-				output("READ %v\n", args["path"])
+				offset := iToFloat(args["offset"])
+				output("READ %v (%.0f,%.0f)\n", args["path"], offset, offset+iToFloat(args["limit"]))
 			} else if tc.Function.Name == "edit" {
-				output("EDIT %v (%d)\n", args["path"], len(args["new_text"].(string)))
+				output("EDIT %v (%d)\n", args["path"], len(strings.Split(args["new_text"].(string), "\n")))
 			} else if tc.Function.Name == "write" {
-				output("WRITE %v (%d)\n", args["path"], len(args["content"].(string)))
+				output("WRITE %v (%d)\n", args["path"], len(strings.Split(args["content"].(string), "\n")))
 			} else if tc.Function.Name == "bash" {
 				output("BASH %v\n", args["command"])
 			} else if tc.Function.Name == "web_search" {
@@ -187,6 +192,8 @@ type StreamChoice struct {
 type StreamResponse struct {
 	Choices []StreamChoice `json:"choices"`
 }
+
+var ansiRE = regexp.MustCompile(`\x1b\[[0-9;?]*[ -/]*[@-~]`)
 
 var tools = []Tool{
 	makeTool("read", "Read file contents. Use offset/limit for large files.", map[string]interface{}{
@@ -272,10 +279,19 @@ func executeTool(name, argsJSON, workDir string) string {
 	}
 
 	resolvePath := func(p string) string {
-		if strings.HasPrefix(p, "/") {
+		if strings.HasPrefix(p, "~") {
+			if homeDir, err := os.UserHomeDir(); err == nil {
+				if p == "~" {
+					p = homeDir
+				} else if strings.HasPrefix(p, "~/") {
+					p = filepath.Join(homeDir, p[2:])
+				}
+			}
+		}
+		if filepath.IsAbs(p) {
 			return p
 		}
-		return workDir + "/" + p
+		return filepath.Join(workDir, p)
 	}
 
 	switch name {
@@ -332,10 +348,20 @@ func executeTool(name, argsJSON, workDir string) string {
 		return "File edited successfully"
 
 	case "bash":
-		cmd := exec.Command("bash", "-c", getString("command"))
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, "bash", "-c", getString("command"))
 		cmd.Dir = workDir
+		cmd.Env = append(os.Environ(), "TMUX=")
 		out, err := cmd.CombinedOutput()
 		if err != nil {
+			if ctx.Err() == context.DeadlineExceeded {
+				return string(out) + "\nError: command timed out after 3 minutes"
+			}
+			if e, ok := err.(*exec.ExitError); ok {
+				return string(out) + "\nexit code: " + strconv.Itoa(e.ExitCode())
+
+			}
 			return string(out) + "\nError: " + err.Error()
 		}
 		return string(out)
@@ -413,7 +439,7 @@ func executeTool(name, argsJSON, workDir string) string {
 		content = regexp.MustCompile(`<script([\s\S]+?)</script>`).ReplaceAllString(content, "")
 		content = regexp.MustCompile(`<[^>]*>`).ReplaceAllString(content, "")
 		content = regexp.MustCompile(`\s+`).ReplaceAllString(content, " ")
-		return strings.TrimSpace(content)
+		return truncate(strings.TrimSpace(content), 50000)
 	}
 	return "Unknown tool"
 }
@@ -424,7 +450,7 @@ func callAPI(messages []Message, output func(string, ...any)) (string, []ToolCal
 		return "", nil, fmt.Errorf("OPENROUTER_API_KEY environment variable not set")
 	}
 
-	reqBody := Request{Model: or(os.Getenv("KAGENT_MODEL"), "anthropic/claude-opus-4.6"), Messages: messages, Tools: tools, Stream: true, Reasoning: RequestResoning{Effort: "high"}}
+	reqBody := Request{Model: or(os.Getenv("KAGENT_MODEL"), "x-ai/grok-code-fast-1"), Messages: messages, Tools: tools, Stream: true, Reasoning: RequestResoning{Effort: "medium"}}
 	jsonBody, _ := json.Marshal(reqBody)
 
 	req, _ := http.NewRequest("POST", "https://openrouter.ai/api/v1/chat/completions", bytes.NewBuffer(jsonBody))
@@ -468,8 +494,12 @@ func callAPI(messages []Message, output func(string, ...any)) (string, []ToolCal
 
 		delta := sr.Choices[0].Delta
 		if delta.Content != "" {
-			output("%s", delta.Content)
-			content.WriteString(delta.Content)
+			chunk := ansiRE.ReplaceAllString(delta.Content, "")
+			chunk = strings.ReplaceAll(chunk, "\r", "")
+			if chunk != "" {
+				output("%s", chunk)
+				content.WriteString(chunk)
+			}
 		}
 
 		for _, tc := range delta.ToolCalls {
@@ -494,6 +524,13 @@ func callAPI(messages []Message, output func(string, ...any)) (string, []ToolCal
 		output("\n")
 	}
 	return content.String(), toolCalls, nil
+}
+
+func iToFloat(v any) float64 {
+	if f, ok := v.(float64); ok {
+		return f
+	}
+	return 0
 }
 
 func truncate(s string, n int) string {

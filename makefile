@@ -26,6 +26,9 @@ ked:
 
 kagent:
 	go build -o build/$@ agent.go
+ki: kagent
+	cp build/kagent ~/bin/kagent
+	which codesign && codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime ~/bin/kagent
 
 tunel:
 	GOOS=linux GOARCH=amd64 go build -v -ldflags "-s -w" -installsuffix cgo -o build/tunel tunel.go
