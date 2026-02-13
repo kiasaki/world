@@ -39,5 +39,5 @@ if [ ! -d "$HOME/zig" ]; then
   tar -xf zig.tar.xz
   mv zig-* ~/zig
   rm zig.tar.xz
-  sudo ln -s ~/zig/zig /usr/bin/zig
+  sudo ln -s ~/zig/zig ~/bin/zig
 fi

@@ -30,7 +30,7 @@ hi DiffLine     cterm=NONE                          ctermfg=4
 hi DiffAdded    cterm=NONE                          ctermfg=2
 hi DiffRemoved  cterm=NONE                          ctermfg=1
 hi DiffText     cterm=reverse                       ctermfg=NONE
-hi Keyword      cterm=NONE gui=NONE ctermbg=NONE    ctermfg=8 " 6
+hi Keyword      cterm=NONE gui=NONE ctermbg=NONE    ctermfg=0 " 6
 hi Number       cterm=NONE          ctermbg=NONE    ctermfg=3
 hi Char         cterm=NONE          ctermbg=NONE    ctermfg=NONE
 hi Format       cterm=NONE          ctermbg=NONE    ctermfg=NONE
@@ -39,7 +39,7 @@ hi Constant     cterm=NONE          ctermbg=NONE    ctermfg=NONE " 2
 hi Directive    cterm=NONE          ctermbg=NONE    ctermfg=NONE
 hi Comment      cterm=NONE          ctermbg=NONE    ctermfg=8
 hi Func         cterm=NONE          ctermbg=NONE    ctermfg=NONE " 2
-hi Function     cterm=NONE          ctermbg=NONE    ctermfg=NONE
+hi Function     cterm=NONE          ctermbg=NONE    ctermfg=0
 hi Type         cterm=NONE          ctermbg=NONE    ctermfg=5
 hi Identifier   cterm=NONE          ctermbg=NONE    ctermfg=NONE
 hi PreProc      cterm=NONE                          ctermfg=NONE " 2
