@@ -9,8 +9,7 @@ ubu: i
 	sudo systemctl daemon-reload
 	sudo systemctl enable webterm
 	sudo systemctl start webterm
-osx: b
-	cp webterm ~/bin/webterm
+osx: i
 	sudo cp launchd.plist /Library/LaunchDaemons/webterm.plist
 	sudo launchctl unload -w /Library/LaunchDaemons/webterm.plist || true
 	sudo launchctl load -w /Library/LaunchDaemons/webterm.plist
