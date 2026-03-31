@@ -5,10 +5,10 @@
     <key>Label</key>
     <string>com.atriumph.webterm</string>
     <key>UserName</key>
-    <string>a</string>
+    <string>frederic</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/a/bin/webterm</string>
+        <string>/Users/frederic/bin/webterm</string>
     </array>
     <key>KeepAlive</key>
     <true/>

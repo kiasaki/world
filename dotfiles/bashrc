@@ -1,6 +1,8 @@
 export TERM=xterm
 export PAGER=less
 export EDITOR=nvim
+export HISTFILE=/dev/null
+export HISTSIZE=0
 export PATH="$PATH:.:$HOME/bin:$HOME/.local/bin:/usr/bin:/bin:/usr/local/bin:/usr/sbin:/sbin:$HOME/goroot/bin:$HOME/gopath/bin:$HOME/.cargo/bin:$HOME/n/bin:$HOME/.foundry/bin"
 export GOPATH=$HOME/gopath
 export GOROOT=$HOME/goroot
