@@ -1,5 +1,6 @@
 #!/bin/bash
 set -xe
+rm -f ~/.zshrc && cp bashrc ~/.zshrc
 rm -f ~/.bashrc && cp bashrc ~/.bashrc
 rm -f ~/.psqlrc && cp psqlrc ~/.psqlrc
 rm -f ~/.sqliterc && cp sqliterc ~/.sqliterc

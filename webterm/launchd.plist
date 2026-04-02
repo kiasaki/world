@@ -4,14 +4,18 @@
 <dict>
     <key>Label</key>
     <string>com.atriumph.webterm</string>
+    <key>SessionCreate</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>Disabled</key>
+    <false/>
     <key>UserName</key>
     <string>frederic</string>
     <key>ProgramArguments</key>
     <array>
         <string>/Users/frederic/bin/webterm</string>
     </array>
-    <key>KeepAlive</key>
-    <true/>
     <key>EnvironmentVariables</key>
     <dict>
        <key>TERM</key>

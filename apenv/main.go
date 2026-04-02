@@ -399,13 +399,12 @@ func loadOrCreateMacKey() ([]byte, error) {
 		user = "default"
 	}
 
-	find := exec.Command("security", "find-generic-password", "-a", user, "-s", serviceName, "-w")
-	output, err := find.CombinedOutput()
-	if err == nil {
-		return decodeStoredKey(output)
+	findOutput, findErr := runSecurity("find-generic-password", "-a", user, "-s", serviceName, "-w")
+	if findErr == nil {
+		return decodeStoredKey(findOutput)
 	}
-	if !strings.Contains(string(output), "could not be found") {
-		return nil, fmt.Errorf("read key from keychain: %v: %s", err, strings.TrimSpace(string(output)))
+	if !strings.Contains(string(findOutput), "could not be found") {
+		return nil, fmt.Errorf("read key from keychain: %v: %s", findErr, strings.TrimSpace(string(findOutput)))
 	}
 
 	key, encoded, err := generateKey()
@@ -413,13 +412,28 @@ func loadOrCreateMacKey() ([]byte, error) {
 		return nil, err
 	}
 
-	add := exec.Command("security", "add-generic-password", "-U", "-a", user, "-s", serviceName, "-w", encoded)
-	addOutput, addErr := add.CombinedOutput()
+	addOutput, addErr := runSecurity("add-generic-password", "-U", "-a", user, "-s", serviceName, "-w", encoded)
 	if addErr != nil {
 		return nil, fmt.Errorf("store key in keychain: %v: %s", addErr, strings.TrimSpace(string(addOutput)))
 	}
 
 	return key, nil
+}
+
+func runSecurity(args ...string) ([]byte, error) {
+	output, err := exec.Command("security", args...).CombinedOutput()
+	if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 36 {
+		fmt.Fprintln(os.Stderr, "Keychain is locked. Enter your password to unlock.")
+		unlock := exec.Command("security", "unlock-keychain")
+		unlock.Stdin = os.Stdin
+		unlock.Stdout = os.Stdout
+		unlock.Stderr = os.Stderr
+		if unlockErr := unlock.Run(); unlockErr != nil {
+			return output, fmt.Errorf("unlock keychain: %v", unlockErr)
+		}
+		return exec.Command("security", args...).CombinedOutput()
+	}
+	return output, err
 }
 
 func loadOrCreateFileKey() ([]byte, error) {
