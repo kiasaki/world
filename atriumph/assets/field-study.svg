@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 960" fill="none">
+  <title>Field study</title>
+  <desc>An original abstract study of folded organic forms in six green-gray tones, with fine procedural grain.</desc>
+  <defs>
+    <filter id="grain" x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="3" seed="23" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".2"/></feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="multiply"/>
+    </filter>
+    <clipPath id="frame"><path d="M0 0H800V960H0z"/></clipPath>
+  </defs>
+  <g clip-path="url(#frame)" filter="url(#grain)">
+    <path fill="#c5c9be" d="M0 0H800V960H0z"/>
+    <path fill="#969f90" d="M-100 900C80 630 116 238 398 114 516 61 714 48 877-110V960H-100Z"/>
+    <path fill="#626e60" d="M83 1041C297 745 173 488 441 297 579 199 820 241 860 71L925 970Z"/>
+    <path fill="#353e35" d="M271 1040C561 740 322 490 547 398 632 363 762 421 841 335L833 992Z"/>
+    <path fill="#181c19" d="M433 1014C621 813 451 674 597 584 715 511 775 612 840 533L840 1000Z"/>
+    <path fill="#f2f1e9" d="M57-35C258 166 181 342 116 493 78 579 85 671 45 765 56 587 12 551 44 382 79 193 139 148 57-35Z"/>
+    <path stroke="#f2f1e9" stroke-opacity=".45" stroke-width="1.2" d="M134 964C394 660 236 449 477 286 623 188 791 231 813 117M297 986C560 743 356 490 558 411 668 368 750 429 806 378M458 976C613 820 468 662 615 589 703 545 775 603 817 562"/>
+  </g>
+</svg>
