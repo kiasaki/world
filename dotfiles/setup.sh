@@ -16,8 +16,8 @@ rm -f ~/.config/ghostty/config && cp ghostty ~/.config/ghostty/config
 touch ~/.myenv ~/.hushlogin
 
 if [ ! -f $HOME/goroot/bin/go ]; then
-  #wget -O go.tar.gz https://go.dev/dl/go1.25.5.linux-amd64.tar.gz
-  wget -O go.tar.gz https://go.dev/dl/go1.26.0.darwin-arm64.tar.gz
+  wget -O go.tar.gz https://go.dev/dl/go1.25.5.linux-amd64.tar.gz
+  #wget -O go.tar.gz https://go.dev/dl/go1.26.0.darwin-arm64.tar.gz
   tar -xzf go.tar.gz
   mv go ~/goroot
   rm go.tar.gz

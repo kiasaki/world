@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image press — Atriumph</title>
+<style>
+:root {
+  color-scheme: dark;
+  --ink: #181c19;
+  --paper: #f2f1e9;
+  --ash: #c5c9be;
+  --peat: #626e60;
+  --surface: #111312;
+  --surface-raised: #191c1a;
+  --text: #f2f1e9;
+  --text-muted: #b6bab3;
+  --line: #3c423d;
+  --control-line: #8c948b;
+  --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface); color: var(--text); font: 16px/1.5 Arial, Helvetica, sans-serif; }
+a { color: inherit; text-underline-offset: .25em; }
+button, select, input { font: inherit; accent-color: var(--text); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--text); outline-offset: 4px; }
+::selection { background: var(--text); color: var(--surface); }
+button, select { border: 1px solid var(--control-line); border-radius: 0; min-height: 44px; padding: 10px 12px; color: var(--text); background: var(--surface); }
+button { cursor: pointer; }
+button:hover { background: var(--surface-raised); }
+button:disabled { opacity: .5; cursor: wait; }
+.shell { max-width: 1600px; padding: 0 clamp(20px, 4vw, 64px); margin: auto; }
+nav, .label, .meta, footer { font: 12px/1.6 var(--mono); }
+nav { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px 24px; border-bottom: 1px solid var(--line); padding: 24px 0; }
+nav div { display: flex; align-items: center; flex-wrap: wrap; gap: 12px 24px; }
+nav a { padding-block: 6px; }
+.attribution { display: inline-flex; gap: 10px; align-items: center; text-decoration: none; }
+.attribution svg { width: 28px; height: 28px; }
+.meta, footer { color: var(--text-muted); }
+header { display: flex; justify-content: space-between; align-items: end; gap: 24px; padding: 36px 0; }
+h1 { font-size: clamp(40px, 5vw, 72px); font-weight: 500; line-height: 1; letter-spacing: -.065em; margin: 0; }
+p { margin: 0; }
+.label { text-transform: uppercase; letter-spacing: .04em; }
+.workspace { display: grid; grid-template-columns: 280px minmax(0, 1fr); border-top: 1px solid var(--line); }
+.controls { padding: 28px 28px 32px 0; }
+.controls > * + * { margin-top: 24px; }
+.upload { display: grid; gap: 8px; }
+.upload > label { color: var(--text-muted); margin-bottom: 8px; }
+.upload button { width: 100%; }
+input[type=file] { width: 100%; font-size: 12px; }
+input[type=file]::file-selector-button { padding: 10px; min-height: 44px; background: var(--surface); color: var(--text); border: 1px solid var(--control-line); margin: 0 8px 8px 0; cursor: pointer; }
+.control label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+select, input[type=range] { width: 100%; }
+input[type=range] { margin: 8px 0; }
+output { color: var(--text-muted); font-family: var(--mono); font-size: 12px; }
+.swatches { display: flex; height: 20px; gap: 3px; margin-top: 12px; }
+.swatches span { flex: 1; border: 1px solid var(--control-line); }
+.actions { display: grid; gap: 8px; }
+.primary { background: var(--text); color: var(--surface); border-color: var(--text); }
+.primary:hover { background: var(--ash); }
+.preview { background: var(--surface-raised); border-left: 1px solid var(--line); padding: 28px; min-width: 0; }
+.preview.dragging { outline: 2px dashed var(--text); outline-offset: -10px; }
+.preview-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 24px; }
+.stage { display: flex; align-items: center; justify-content: center; min-height: 460px; }
+canvas { display: block; max-width: 100%; max-height: 680px; width: auto; height: auto; object-fit: contain; }
+#status { min-height: 3.2em; margin-top: 20px; overflow-wrap: anywhere; }
+#status[data-error=true] { color: var(--text); font-weight: bold; }
+footer { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 20px 0; border-top: 1px solid var(--line); }
+.skip { position: absolute; top: -100px; background: var(--surface); padding: 12px; }
+.skip:focus { top: 0; }
+@media(max-width: 760px) {
+  nav { padding-block: 16px; }
+  header { padding: 28px 0; }
+  .workspace { grid-template-columns: 1fr; }
+  .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 24px 0; }
+  .controls > * + * { margin: 0; }
+  .upload, .actions { grid-column: 1 / -1; }
+  .preview { border-left: 0; border-top: 1px solid var(--line); padding: 16px; }
+  .stage { min-height: 240px; }
+  canvas { max-height: 560px; }
+  .preview-head { margin-bottom: 16px; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+<nav aria-label="Product"><a class="attribution" href="index.html"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" aria-hidden="true"><path fill="currentColor" fill-rule="evenodd" d="M12 52 L28 12 H36 L52 52 H42 L38 40 H26 L22 52 Z M29 31 H35 L32 21 Z"/></svg><span>By Atriumph</span></a><div></div></nav>
+<header><h1>Image press</h1></header>
+<main id="main" class="workspace">
+<form class="controls" onsubmit="return false" aria-label="Image settings">
+<div class="upload"><label for="file" class="label">01 / Source image</label><input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/avif,image/gif"><button id="sample" type="button">Use sample</button></div>
+<div class="control"><label for="format">Format</label><select id="format"><option value="square">Square crop · 1080 × 1080</option><option value="portrait">Portrait crop · 1080 × 1350</option><option value="landscape">Landscape crop · 1600 × 900</option><option value="original" selected>Source fit · up to 2048 px</option></select></div>
+<div class="control"><label for="tones">Palette</label><select id="tones"><option value="4">4 tones</option><option value="6" selected>6 tones</option></select><div id="swatches" class="swatches" role="img" aria-label="Current image palette"></div></div>
+<div class="control"><label for="grain">Grain <output id="grain-value" for="grain">24</output></label><input id="grain" type="range" min="0" max="60" value="24"></div>
+<div class="control"><label for="tint">Moss tint <output id="tint-value" for="tint">70%</output></label><input id="tint" type="range" min="0" max="100" value="70"></div>
+<div class="control"><label for="contrast">Contrast <output id="contrast-value" for="contrast">110%</output></label><input id="contrast" type="range" min="60" max="180" value="110"></div>
+<div class="actions"><button id="download" class="primary" type="button">Download PNG ↗</button><button id="reset" type="button">Reset settings</button></div>
+</form>
+<section id="drop" class="preview" aria-label="Image preview and drop area">
+<div class="preview-head"><span class="label">02 / Preview</span></div>
+<div class="stage"><canvas id="canvas" width="1080" height="1080" role="img" aria-label="Processed image with Atriumph frame and mark">Image preview requires Canvas 2D.</canvas></div>
+<p id="status" class="meta" role="status" aria-live="polite"></p>
+</section>
+</main>
+<footer><span>Atriumph</span></footer>
+<noscript>Enable JavaScript to process images. No image is sent to a server.</noscript>
+</div>
+<script id="image-engine">
+const INK = '#181c19';
+const PAPER = '#f2f1e9';
+const MARK = 'M12 52 L28 12 H36 L52 52 H42 L38 40 H26 L22 52 Z M29 31 H35 L32 21 Z';
+const BASE_PALETTE = [[24,28,25], [53,62,53], [98,110,96], [150,159,144], [197,201,190], [242,241,233]];
+function paletteFor(tones, tint) {
+  const colors = tones === 4 ? [BASE_PALETTE[0], BASE_PALETTE[2], BASE_PALETTE[4], BASE_PALETTE[5]] : BASE_PALETTE;
+  return colors.map(color => {
+    const gray = Math.round(.2126 * color[0] + .7152 * color[1] + .0722 * color[2]);
+    return color.map(channel => Math.round(gray + (channel - gray) * tint / 100));
+  });
+}
+const LINEAR = Array.from({length: 256}, (_, i) => {
+  const v = i / 255;
+  return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+});
+function brightness(r, g, b) {
+  const v = .2126 * LINEAR[r] + .7152 * LINEAR[g] + .0722 * LINEAR[b];
+  return 255 * (v <= .0031308 ? v * 12.92 : 1.055 * v ** (1 / 2.4) - .055);
+}
+function quantize(data, palette, grain, contrast) {
+  const levels = palette.map(c => brightness(...c));
+  let seed = 314159;
+  for (let i = 0; i < data.length; i += 4) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    const noise = (seed / 4294967296 - .5) * grain * 2;
+    const value = (brightness(data[i], data[i + 1], data[i + 2]) - 127.5) * contrast / 100 + 127.5 + noise;
+    let nearest = 0;
+    for (let j = 1; j < levels.length; j++) {
+      if (Math.abs(levels[j] - value) < Math.abs(levels[nearest] - value)) nearest = j;
+    }
+    data[i] = palette[nearest][0]; data[i + 1] = palette[nearest][1]; data[i + 2] = palette[nearest][2]; data[i + 3] = 255;
+  }
+  return data;
+}
+function frameLayout(sourceWidth, sourceHeight, format) {
+  const fixed = {square: [1080, 1080], portrait: [1080, 1350], landscape: [1600, 900]}[format];
+  const longest = Math.max(sourceWidth, sourceHeight);
+  const scale = Math.max(128, Math.min(2048, longest)) / longest;
+  const unit = (fixed ? Math.min(...fixed) : Math.min(sourceWidth, sourceHeight) * scale) / 1080;
+  const margin = Math.max(1, Math.round(32 * unit));
+  const bottom = Math.max(1, Math.round(58 * unit));
+  const fit = Math.min(scale, (2048 - 2 * margin) / sourceWidth, (2048 - margin - bottom) / sourceHeight);
+  const innerWidth = fixed ? fixed[0] - 2 * margin : Math.max(1, Math.round(sourceWidth * fit));
+  const innerHeight = fixed ? fixed[1] - margin - bottom : Math.max(1, Math.round(sourceHeight * fit));
+  return {width: innerWidth + 2 * margin, height: innerHeight + margin + bottom, innerWidth, innerHeight, margin, bottom, unit};
+}
+</script>
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('canvas');
+const defaults = {format: 'original', tones: '6', grain: '24', tint: '70', contrast: '110'};
+let source;
+let sourceName = 'Sample study';
+let loadVersion = 0;
+let pendingFrame = 0;
+let loading = false;
+function status(text, error = false) {
+  $('status').textContent = text;
+  $('status').dataset.error = String(error);
+}
+function rounded(context, x, y, width, height, radius) {
+  context.beginPath(); context.roundRect(x, y, width, height, radius);
+}
+function render(candidate = source, name = sourceName, announce = false) {
+  if (pendingFrame) cancelAnimationFrame(pendingFrame);
+  pendingFrame = 0;
+  const settings = Object.fromEntries(Object.keys(defaults).map(key => [key, $(key).value]));
+  const {width, height, innerWidth, innerHeight, margin, unit} = frameLayout(candidate.width, candidate.height, settings.format);
+  const output = document.createElement('canvas');
+  output.width = width; output.height = height;
+  const ctx = output.getContext('2d');
+  const image = document.createElement('canvas');
+  image.width = innerWidth; image.height = innerHeight;
+  const ic = image.getContext('2d', {willReadFrequently: true});
+  ic.fillStyle = PAPER; ic.fillRect(0, 0, innerWidth, innerHeight);
+  const scale = Math.max(innerWidth / candidate.width, innerHeight / candidate.height);
+  const cropWidth = settings.format === 'original' ? candidate.width : innerWidth / scale;
+  const cropHeight = settings.format === 'original' ? candidate.height : innerHeight / scale;
+  ic.drawImage(candidate, (candidate.width - cropWidth) / 2, (candidate.height - cropHeight) / 2, cropWidth, cropHeight, 0, 0, innerWidth, innerHeight);
+  const pixels = ic.getImageData(0, 0, innerWidth, innerHeight);
+  const palette = paletteFor(Number(settings.tones), Number(settings.tint));
+  quantize(pixels.data, palette, Number(settings.grain), Number(settings.contrast));
+  ic.putImageData(pixels, 0, 0);
+  ctx.fillStyle = PAPER;
+  rounded(ctx, 0, 0, width, height, 24 * unit); ctx.fill();
+  ctx.save();
+  rounded(ctx, margin, margin, innerWidth, innerHeight, 10 * unit); ctx.clip();
+  ctx.drawImage(image, margin, margin);
+  ctx.restore();
+  ctx.strokeStyle = INK; ctx.lineWidth = 2 * unit;
+  rounded(ctx, margin, margin, innerWidth, innerHeight, 10 * unit); ctx.stroke();
+  const badge = 112 * unit;
+  const bx = width - margin - badge;
+  const by = margin + innerHeight - badge;
+  ctx.fillStyle = PAPER;
+  rounded(ctx, bx, by, badge, badge, 12 * unit); ctx.fill(); ctx.stroke();
+  ctx.save(); ctx.translate(bx + badge * .15, by + badge * .15); ctx.scale(badge * .7 / 64, badge * .7 / 64);
+  ctx.fillStyle = INK; ctx.fill(new Path2D(MARK), 'evenodd'); ctx.restore();
+  ctx.fillStyle = INK; ctx.font = `${14 * unit}px Arial, sans-serif`; ctx.fillText('ATRIUMPH', margin, height - 23 * unit);
+  $('swatches').replaceChildren(...palette.map(color => {
+    const el = document.createElement('span'); el.style.background = `rgb(${color.join(',')})`; return el;
+  }));
+  $('grain-value').value = settings.grain;
+  $('tint-value').value = settings.tint + '%';
+  $('contrast-value').value = settings.contrast + '%';
+  canvas.width = width; canvas.height = height;
+  canvas.getContext('2d').drawImage(output, 0, 0);
+  canvas.setAttribute('aria-label', `${name}, processed with ${settings.tones} green-gray tones, grain, a paper frame and the Atriumph mark`);
+  if (announce || (!loading && $('status').dataset.error !== 'true')) status(`${name} · ${width} × ${height} px`);
+}
+function scheduleRender() {
+  if (pendingFrame) cancelAnimationFrame(pendingFrame);
+  pendingFrame = requestAnimationFrame(() => render());
+}
+function sample() {
+  loadVersion++;
+  loading = false;
+  $('download').disabled = false;
+  const image = document.createElement('canvas'); image.width = 1400; image.height = 1100;
+  const c = image.getContext('2d');
+  const bg = c.createLinearGradient(0, 0, 1400, 1100); bg.addColorStop(0, '#dedcce'); bg.addColorStop(1, '#69775f');
+  c.fillStyle = bg; c.fillRect(0, 0, 1400, 1100);
+  let seed = 42;
+  function random() { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; }
+  for (let i = 0; i < 34; i++) {
+    const x = random() * 1800 - 200; const y = 1200; const length = 500 + random() * 750;
+    c.save(); c.translate(x, y); c.rotate((random() - .5) * 1.7);
+    c.strokeStyle = `rgb(${40 + i * 2}, ${50 + i * 2}, ${37 + i * 2})`; c.fillStyle = c.strokeStyle; c.lineWidth = 2 + random() * 3;
+    c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(35, -length / 2, 0, -length); c.stroke();
+    for (let j = 1; j < 16; j++) {
+      const yy = -length * j / 17; const leaf = (1 - j / 19) * (45 + random() * 75);
+      for (const side of [-1, 1]) {
+        c.beginPath(); c.moveTo(10, yy + 12); c.bezierCurveTo(side * leaf, yy + 25, side * leaf * 1.5, yy - 40, side * leaf, yy - 45); c.quadraticCurveTo(side * leaf * .7, yy - 5, 10, yy + 12); c.fill();
+      }
+    }
+    c.restore();
+  }
+  render(image, 'Sample study', true);
+  source = image; sourceName = 'Sample study'; $('file').value = '';
+}
+async function loadFile(file) {
+  const version = ++loadVersion;
+  loading = false;
+  $('download').disabled = false;
+  if (!file) return;
+  if (!/^image\/(png|jpeg|webp|avif|gif)$/.test(file.type)) { status('Choose a PNG, JPEG, WebP, AVIF or GIF image. SVG and HEIC are not supported.', true); return; }
+  if (file.size > 30 * 1024 * 1024) { status('This file is too large. Choose an image under 30 MB.', true); return; }
+  loading = true; $('download').disabled = true; status('Reading image…');
+  let decoded;
+  try {
+    decoded = await createImageBitmap(file);
+    if (version !== loadVersion) { decoded.close(); return; }
+    if (decoded.width * decoded.height > 40000000) { decoded.close(); status('This image exceeds 40 megapixels. Resize it before importing.', true); return; }
+    const scale = Math.min(1, 2048 / Math.max(decoded.width, decoded.height));
+    const image = document.createElement('canvas');
+    image.width = Math.max(1, Math.round(decoded.width * scale)); image.height = Math.max(1, Math.round(decoded.height * scale));
+    image.getContext('2d').drawImage(decoded, 0, 0, image.width, image.height);
+    decoded.close(); decoded = null;
+    render(image, file.name, true);
+    source = image; sourceName = file.name;
+  } catch (error) {
+    if (decoded) decoded.close();
+    if (version === loadVersion) status('Could not read or process this image. Try a smaller PNG or JPEG export.', true);
+    console.error('Image import failed:', error);
+  } finally {
+    if (version === loadVersion) { loading = false; $('download').disabled = false; }
+  }
+}
+$('file').addEventListener('change', event => { loadFile(event.target.files[0]); event.target.value = ''; });
+$('sample').addEventListener('click', sample);
+Object.keys(defaults).forEach(key => $(key).addEventListener('input', scheduleRender));
+$('reset').addEventListener('click', () => { Object.entries(defaults).forEach(([key, value]) => { $(key).value = value; }); render(); });
+window.addEventListener('dragover', event => event.preventDefault());
+window.addEventListener('drop', event => event.preventDefault());
+$('drop').addEventListener('dragover', event => { event.preventDefault(); $('drop').classList.add('dragging'); });
+$('drop').addEventListener('dragleave', event => { if (!$('drop').contains(event.relatedTarget)) $('drop').classList.remove('dragging'); });
+$('drop').addEventListener('drop', event => {
+  event.preventDefault(); $('drop').classList.remove('dragging');
+  if (event.dataTransfer.files.length !== 1) { status('Drop one image at a time.', true); return; }
+  loadFile(event.dataTransfer.files[0]);
+});
+$('download').addEventListener('click', () => {
+  if (loading) return;
+  if (pendingFrame) { cancelAnimationFrame(pendingFrame); render(); }
+  $('download').disabled = true;
+  const filename = `atriumph-${canvas.width}x${canvas.height}.png`;
+  canvas.toBlob(blob => {
+    $('download').disabled = loading;
+    if (!blob) { status('PNG export failed. Try a smaller format.', true); return; }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a'); link.href = url; link.download = filename; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }, 'image/png');
+});
+sample();
+</script>
+</body>
+</html>
